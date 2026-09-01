@@ -433,7 +433,7 @@ function spamSecret () {
         static $secret = null;
         if ($secret !== null) return $secret;
 
-        $file = FORUM_ROOT.DIRECTORY_SEPARATOR.FORUM_USERS.DIRECTORY_SEPARATOR.'.spam_secret';
+        $file = FORUM_DATA.DIRECTORY_SEPARATOR.FORUM_USERS.DIRECTORY_SEPARATOR.'.spam_secret';
         if (!file_exists ($file)) @file_put_contents ($file, bin2hex (random_bytes (32)), LOCK_EX);
 
         return $secret = (string) @file_get_contents ($file);
@@ -493,12 +493,12 @@ function indexRSS () {
         /* sitemap
            -------------------------------------------------------------------------------------------------------------- */
         //we’re going to use the RSS files as sitemaps
-        chdir (FORUM_ROOT);
+        chdir (FORUM_DATA);
         
         //get list of sub-forums and include the root too
         $folders = array ('') + array_filter (
                 //include only directories, but ignore directories starting with ‘.’ and the users / themes folders
-                preg_grep ('/^(\.|users$|themes$|lib$)/', scandir (FORUM_ROOT.DIRECTORY_SEPARATOR), PREG_GREP_INVERT),
+                preg_grep ('/^(\.|users$|themes$|lib$)/', scandir (FORUM_DATA.DIRECTORY_SEPARATOR), PREG_GREP_INVERT),
                 'is_dir'
         );
         
@@ -515,7 +515,7 @@ function indexRSS () {
                 //get the time of the latest item in the RSS feed
                 //(the RSS feed may be missing as they are not generated in new folders until something is posted)
                 if (@$rss = simplexml_load_file (
-                        FORUM_ROOT.($folder ? DIRECTORY_SEPARATOR.$folder : '').DIRECTORY_SEPARATOR.'index.xml'
+                        FORUM_DATA.($folder ? DIRECTORY_SEPARATOR.$folder : '').DIRECTORY_SEPARATOR.'index.xml'
                 ))
                 //if you delete the last thread in a folder, there won’t be anything in the RSS index file!
                 if (@$rss->channel->item[0]) $sitemap->set (array (
@@ -523,7 +523,7 @@ function indexRSS () {
                         './x:lastmod'   => gmdate ('r', strtotime ($rss->channel->item[0]->pubDate))
                 ))->next ()
         ;
-        file_put_contents (FORUM_ROOT.DIRECTORY_SEPARATOR.'sitemap.xml', $xml);
+        file_put_contents (FORUM_DATA.DIRECTORY_SEPARATOR.'sitemap.xml', $xml);
 
         //you saw nothing, right?
         clearstatcache ();
@@ -577,7 +577,7 @@ function searchThreads ($query) {
                         function ($f) use ($dir) { return is_dir ($dir.DIRECTORY_SEPARATOR.$f); }
                 ) as $folder) $walk ($dir.DIRECTORY_SEPARATOR.$folder, $url_path.safeURL ($folder).'/');
         };
-        $walk (FORUM_ROOT, '');
+        $walk (FORUM_DATA, '');
 
         //newest post first, same ordering used throughout the rest of the forum
         usort ($results, function ($a, $b) { return $b['time'] <=> $a['time']; });

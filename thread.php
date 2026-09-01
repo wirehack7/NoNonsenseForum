@@ -308,7 +308,7 @@ if (isset ($_GET['delete'])) {
                 flock ($f, LOCK_UN); fclose ($f);
                 
                 //delete the thread for reals
-                @unlink (FORUM_ROOT.PATH_DIR."$FILE.rss");
+                @unlink (FORUM_DATA.PATH_DIR."$FILE.rss");
                 
                 //regenerate the folder's RSS file
                 indexRSS ();

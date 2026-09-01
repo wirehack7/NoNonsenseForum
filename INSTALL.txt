@@ -162,6 +162,10 @@ serve it as a Tor hidden service -- point a `HiddenServiceDir` /
 NNF (typically listening only on 127.0.0.1) and the site will work at
 its ".onion" address exactly as it does on the clearnet.
 
+For a hidden-ONLY deployment -- where the server must never answer on
+its clearnet IP and nothing about the setup is linked to you -- see the
+step-by-step guide in "TOR.md".
+
 A few things worth checking for a Tor-only, or Tor-and-clearnet, install:
 
 *       Leave `FORUM_HTTPS` set to "false" in 'config.php'. Onion
@@ -197,50 +201,50 @@ docker compose up -d
         The forum will then be available at <http://localhost:8080/>
 
 *       NNF has no database -- threads, sub-forums, "config.php" and the
-        "users" folder are all just files, stored alongside the code
-        itself (see README.txt). "docker-compose.yml" persists these in
-        two different ways, depending on whether a fixed, predictable
-        path exists for them:
-        -       Threads and sub-forums *don't* have one: a thread is
-                just a file, created wherever a sub-forum folder happens
-                to exist (including nowhere at all, i.e. the web-root
-                itself), under a name derived from its title -- there's
-                no single "posts" folder Docker could mount. These (and
-                the application code itself, kept in sync with the image
-                on every container start -- see 'docker-entrypoint.sh')
-                live in a named Docker volume instead of a folder on
-                your machine
-        -       "config.php" and the "users" folder *do* have a fixed
-                path, so these are bind-mounted directly to files/folders
-                right in your checkout ("./config.php", "./users") --
-                directly visible, editable and backupable on the host,
-                and preserved even if the volume above is later wiped
-                (see the `docker compose down -v` warning below)
+        "users" folder are all just files (see README.txt). Normally NNF
+        writes them straight into its own code directory; the Docker
+        image instead keeps the two apart. The code is baked into the
+        image at "/var/www/nnf" (outside the web-root) and the web-root
+        "/var/www/html" holds nothing but data: the sub-forum folders,
+        the "*.rss" threads, "index.xml" / "sitemap.xml", "config.php",
+        the "users" folder and any per-forum "about.html" / "mods.txt".
+        That split is driven by the `NNF_DATA_DIR` environment variable
+        (see the `FORUM_DATA` constant in 'start.php') -- set to
+        "/var/www/html" in the "Dockerfile".
 
-*       Before the first `docker compose up`, create "config.php" so
-        Docker mounts it as a file rather than accidentally creating it
-        as an empty folder (this only matters for "config.php" -- the
-        "users" folder is created automatically if missing):
+*       "docker-compose.yml" bind-mounts that data directory to "./data"
+        in your checkout, so every thread, the "users" folder and
+        "config.php" are directly visible, editable and backup-able on
+        the host. There is no named volume and nothing hidden inside one.
 
-cp config.default.php config.php
+*       "config.php" is seeded from "config.default.php" on the first
+        start if "./data/config.php" doesn't exist yet; edit that file
+        to customise the forum. (Unlike earlier versions you do NOT need
+        to create it by hand before the first `docker compose up`.)
 
-*       Because "config.php" / "users" are bind-mounted, the container
-        will change their on-disk ownership (to its own UID/GID 33,
-        "www-data") the first time it starts. If you need to edit
-        "config.php" afterwards and get a permission error doing so as
-        yourself, either run the edit through the container instead:
+*       The container runs as UID/GID 33 ("www-data") and takes ownership
+        of "./data" on start. To edit a file there and avoid a permission
+        error, either go through the container:
 
-docker compose exec forum vi config.php
+docker compose exec forum vi /var/www/html/config.php
 
         ...or reclaim ownership on the host (Linux/macOS):
 
-sudo chown -R "$(id -u):$(id -g)" config.php users
+sudo chown -R "$(id -u):$(id -g)" data
 
-*       "docker compose down -v" wipes the named volume -- i.e. every
-        thread and sub-forum -- back to nothing. "config.php" and
-        "users" (being bind mounts, not part of that volume) are *not*
-        affected and don't need backing up separately from the rest of
-        your checkout
+*       Deleting "./data" throws away every thread and sub-forum. Back
+        up that one directory and you have backed up the whole forum.
+        `docker compose down` on its own leaves it untouched.
+
+*       Behind a reverse proxy that serves NNF on a sub-path rather than
+        at the domain root, set `NNF_URL_PATH` (e.g. "/forum/") in
+        "docker-compose.yml" to match.
+
+*       Migrating from a pre-"FORUM_DATA" image (data in a named volume):
+        copy the volume's contents into "./data", then delete the code
+        files from it (everything the repo's ".gitignore" whitelists --
+        "index.php", "start.php", "lib", "themes" &c.), leaving only
+        your threads, sub-forums, "config.php" and "users".
 
 *       To use the image already built and published by this project's
         own CI (see '.github/workflows/docker-build.yml') instead of

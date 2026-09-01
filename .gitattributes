@@ -1,9 +1,21 @@
 .gitattributes text
 .gitignore text
 *.txt text
+*.md text
 *.php text
 *.html text
 *.css text
+
+# must stay LF: shell scripts break with CRLF, and the rest go into the Docker
+# image / are read by Apache as-is
+*.sh text eol=lf
+Dockerfile text eol=lf
+docker-compose.yml text eol=lf
+docker-compose.tor.yml text eol=lf
+.dockerignore text eol=lf
+.htaccess text eol=lf
+.htaccess.docker text eol=lf
+nnf.conf text eol=lf
 
 *.png binary
 *.jpg binary

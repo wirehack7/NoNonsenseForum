@@ -69,7 +69,7 @@ final class SpamProtectionTest extends TestCase {
 
         $time   = time () - $seconds;
         $secret = trim ((string) file_get_contents (
-                FORUM_ROOT.DIRECTORY_SEPARATOR.FORUM_USERS.DIRECTORY_SEPARATOR.'.spam_secret'
+                FORUM_DATA.DIRECTORY_SEPARATOR.FORUM_USERS.DIRECTORY_SEPARATOR.'.spam_secret'
         ));
         return $time.'.'.hash_hmac ('sha256', (string) $time, $secret);
     }

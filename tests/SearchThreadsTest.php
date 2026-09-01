@@ -2,10 +2,10 @@
 
 use PHPUnit\Framework\TestCase;
 
-/* covers `searchThreads ()` in 'lib/functions.php'. It reads real ".rss" files from disk under `FORUM_ROOT`, so this
-   test drops a throwaway, uniquely-named ".rss" fixture directly into the (real) repo root before each test and
-   removes it again afterwards -- `FORUM_ROOT` is a `define ()`d constant set once for the whole test run (see
-   'tests/bootstrap.php') and so can't be pointed at a scratch directory per test the way e.g. `FORUM_USERS` is. */
+/* covers `searchThreads ()` in 'lib/functions.php'. It reads real ".rss" files from disk under `FORUM_DATA`, so this
+   test drops a throwaway, uniquely-named ".rss" fixture into that directory before each test and removes it again
+   afterwards. `FORUM_DATA` is the tests' throwaway temp directory (see 'tests/bootstrap.php'), so nothing is ever
+   written into the repo. */
 final class SearchThreadsTest extends TestCase {
 
     private string $fixtureFile;
@@ -21,7 +21,7 @@ final class SearchThreadsTest extends TestCase {
 
     protected function setUp (): void {
         $this->nonce       = 'zzzsearchnonce'.getmypid ();
-        $this->fixtureFile = FORUM_ROOT.DIRECTORY_SEPARATOR.'.nnf_test_'.$this->nonce.'.rss';
+        $this->fixtureFile = FORUM_DATA.DIRECTORY_SEPARATOR.'.nnf_test_'.$this->nonce.'.rss';
     }
 
     protected function tearDown (): void {

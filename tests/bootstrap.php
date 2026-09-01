@@ -8,19 +8,23 @@
 
 define ('FORUM_ROOT',  dirname (__DIR__));
 define ('FORUM_LIB',   FORUM_ROOT.DIRECTORY_SEPARATOR.'lib'.DIRECTORY_SEPARATOR);
-//a throwaway, private folder for the anti-spam secret (see 'spamSecret ()' in 'lib/functions.php') that tests
-//generate. `FORUM_USERS` is always a path *relative* to `FORUM_ROOT` (see 'config.default.php'), same as in
-//production, so this has to be a folder name, not an absolute path
-define ('FORUM_USERS', '.nnf_test_users_'.getmypid ());
-$GLOBALS['NNF_TEST_USERS_DIR'] = FORUM_ROOT.DIRECTORY_SEPARATOR.FORUM_USERS;
-@mkdir ($GLOBALS['NNF_TEST_USERS_DIR'], 0777, true);
-//clean up after ourselves once the test process ends
+//in production NNF's request-time data root is separable from its code via the `NNF_DATA_DIR` environment variable
+//(see the `FORUM_DATA` constant in 'start.php'). the tests use that same seam to keep every file they touch -- the
+//anti-spam secret, `searchThreads ()`'s ".rss" fixtures -- inside a single throwaway temp directory, so a test run
+//never writes anything into the repo. `FORUM_USERS` stays a plain folder name, relative to `FORUM_DATA`, as always.
+define ('FORUM_DATA',  sys_get_temp_dir ().DIRECTORY_SEPARATOR.'nnf_test_'.getmypid ());
+define ('FORUM_USERS', 'users');
+@mkdir (FORUM_DATA.DIRECTORY_SEPARATOR.FORUM_USERS, 0777, true);
+//delete the whole temp data dir once the test process ends
 register_shutdown_function (function () {
-        //`glob ('*')` skips dotfiles (like '.spam_secret') -- `scandir` doesn't
-        foreach (array_diff (@scandir ($GLOBALS['NNF_TEST_USERS_DIR']) ?: array (), array ('.', '..')) as $file) {
-                @unlink ($GLOBALS['NNF_TEST_USERS_DIR'].DIRECTORY_SEPARATOR.$file);
-        }
-        @rmdir ($GLOBALS['NNF_TEST_USERS_DIR']);
+        $rrmdir = function ($dir) use (&$rrmdir) {
+                foreach (array_diff (@scandir ($dir) ?: array (), array ('.', '..')) as $f) {
+                        $path = $dir.DIRECTORY_SEPARATOR.$f;
+                        is_dir ($path) ? $rrmdir ($path) : @unlink ($path);
+                }
+                @rmdir ($dir);
+        };
+        $rrmdir (FORUM_DATA);
 });
 //`formatText ()` needs this to decide whether a detected link is internal (no "external" rel) or not
 define ('FORUM_URL', 'http://forum.example.test');
