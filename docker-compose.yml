@@ -14,5 +14,7 @@ services:
       # the data volume: sub-forums, threads ("*.rss"), "index.xml" / "sitemap.xml", "config.php", the "users"
       # folder, per-forum "about.html" / "mods.txt" &c. -- and nothing else. directly host-editable and backup-able.
       # "config.php" is seeded from "config.default.php" on first start; edit "./data/config.php" to customise.
-      - ./data:/var/www/html
+      # ":z" relabels the mount for SELinux hosts (Fedora/RHEL/Rocky, hardened setups); it's a harmless no-op
+      # elsewhere. Without it the container gets "Permission denied" writing here despite correct ownership.
+      - ./data:/var/www/html:z
     restart: unless-stopped

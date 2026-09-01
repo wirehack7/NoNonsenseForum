@@ -22,6 +22,7 @@ parameters:
         - phpstan-bootstrap.php
 
     excludePaths:
+        - lib/error.php # shared plain HTML/PHP error page, not logic
         - lib/error_*.php # plain HTML/PHP error pages, not logic
 
     ignoreErrors:

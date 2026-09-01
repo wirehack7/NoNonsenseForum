@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
-# Manage the forum's access-gate passwords ("users/access.txt" -- see INSTALL.txt 2.6).
-# Any ONE listed password lets a visitor in; each entry carries a "# label" so you can
-# tell which is which when revoking.
+# Manage an access-gate 'access.txt' -- the shared "door" password(s) in front of the
+# forum root or a sub-forum (see INSTALL.txt 2.6). Any ONE listed password lets a
+# visitor in; each entry carries a "# label" so you can tell which is which.
 #
-#   tools/manage-access.sh add "Alice"           generate a password for Alice, hash it, add it
-#   tools/manage-access.sh add "meetup" hunter2  add a password you chose
-#   tools/manage-access.sh add --plain "Bob"     store it in plain text (not hashed)
-#   tools/manage-access.sh list                  show the labels (never prints the passwords)
-#   tools/manage-access.sh remove 2              revoke entry #2 from the list
+#   tools/manage-access.sh add "Alice"            generate a password, hash it, add it (forum root)
+#   tools/manage-access.sh add "meetup" hunter2   add a password you chose
+#   tools/manage-access.sh add --plain "Bob"      store it in plain text (not hashed)
+#   tools/manage-access.sh list                   show the labels (never prints the passwords)
+#   tools/manage-access.sh remove 2               revoke entry #2 from the list
+#
+#   tools/manage-access.sh -f news add "Carol"    ...operate on the /news sub-forum instead
+#   tools/manage-access.sh -f news list
 #
 # Config via environment:
 #   DATA_DIR      (default <repo>/data)   -- NNF's data directory
@@ -16,7 +19,15 @@ set -euo pipefail
 
 REPO_DIR=$(cd "$(dirname "$0")/.." && pwd)
 DATA_DIR=${DATA_DIR:-$REPO_DIR/data}
-ACCESS_FILE=$DATA_DIR/users/access.txt
+
+FORUM=
+if [ "${1:-}" = "-f" ]; then
+	FORUM=$(printf '%s' "${2:-}" | sed 's#^/*##; s#/*$##')   # strip leading/trailing slashes
+	[ -n "$FORUM" ] || { echo "error: -f needs a sub-forum path" >&2; exit 1; }
+	case "$FORUM" in *..*) echo "error: '..' not allowed in -f" >&2; exit 1 ;; esac
+	shift 2
+fi
+ACCESS_FILE=$DATA_DIR${FORUM:+/$FORUM}/access.txt
 
 if [ -z "${COMPOSE_FILE:-}" ]; then
 	COMPOSE_FILE=$REPO_DIR/docker-compose.tor.yml
@@ -119,7 +130,7 @@ remove)
 	;;
 
 *)
-	sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'
+	sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'
 	exit 1
 	;;
 esac

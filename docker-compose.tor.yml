@@ -22,5 +22,7 @@ services:
       NNF_DATA_DIR: /var/www/html
       NNF_URL_PATH: /
     volumes:
-      - ./data:/var/www/html
+      # ":z" relabels the mount for SELinux hosts; harmless no-op elsewhere. Without it the container gets
+      # "Permission denied" writing here despite correct ownership.
+      - ./data:/var/www/html:z
     restart: unless-stopped

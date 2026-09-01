@@ -118,7 +118,7 @@ Members can post in a locked forum but have no moderator powers.
 
 NNF has two ways to keep people out:
 
-1. **`access.txt` — a shared door password (built in).** Put one or more passwords (one per line) in `users/access.txt` and the whole site sits behind a password prompt. Any one password grants access; delete a line to revoke it. Each line can carry a `# label` so you can tell them apart. Lines may be plain text or a `password_hash()` string. The [`tools/manage-access.sh`](tools/manage-access.sh) script generates, lists and removes entries for you. See [`INSTALL.txt`](INSTALL.txt) §2.6. This does **not** cover direct requests for the static `.rss` / `.xml` feed files (the web server serves those without running PHP).
+1. **`access.txt` — a shared door password (built in).** Put one or more passwords (one per line) in an `access.txt` in the forum root **or in any sub-forum folder** (next to `mods.txt`) and that forum — and everything under it — sits behind a password prompt. The nearest `access.txt` walking up to the root is the one that applies, so you can lock the whole site or just one branch. Any one listed password grants access; delete a line to revoke it. Each line can carry a `# label`; values may be plain text or `password_hash()` strings. [`tools/manage-access.sh`](tools/manage-access.sh) manages the file (`-f <sub-forum>` for a sub-forum). See [`INSTALL.txt`](INSTALL.txt) §2.6. Does **not** cover direct requests for the static `.rss` / `.xml` feeds.
 
 2. **`.htpasswd` — web-server auth (covers the feeds too).** Protect the relevant directory with HTTP Basic auth at the Apache level. The users in `.htpasswd` must have the same password as their NNF username. Setting this up needs some `.htaccess` knowledge and isn't covered here.
 

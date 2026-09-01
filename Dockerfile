@@ -14,6 +14,15 @@ RUN apt-get update \
 RUN a2enmod rewrite headers expires deflate \
     && sed -ri -e 's!AllowOverride None!AllowOverride All!g' /etc/apache2/apache2.conf
 
+# never leak PHP warnings / file paths / the PHP version to visitors -- log them instead (to the container's
+# stderr, i.e. `docker compose logs forum`). NNF shows its own generic error pages for the cases that matter.
+RUN { \
+      echo 'display_errors = Off'; \
+      echo 'display_startup_errors = Off'; \
+      echo 'log_errors = On'; \
+      echo 'expose_php = Off'; \
+    } > /usr/local/etc/php/conf.d/nnf-hardening.ini
+
 # NNF writes threads, sub-forums, "config.php" and the "users" folder straight into its own working directory (it has
 # no database -- see README.md). To keep that mutable data completely separate from the code, the code lives OUTSIDE
 # the web-root here, at "/var/www/nnf", and is reached over the web through the "Alias /_nnf" in "nnf.conf". The

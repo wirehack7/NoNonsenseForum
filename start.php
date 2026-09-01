@@ -140,10 +140,6 @@ define ('HTACCESS', (bool) @$_SERVER['HTTP_HTACCESS']);
 //if '.htaccess' is missing or disabled, and the 'users' folder is in an insecure location, warn the site admin to move it
 if (!HTACCESS && FORUM_USERS == 'users') require FORUM_LIB.'error_htaccess.php';
 
-//optional access gate: if 'access.txt' lists door passwords, block everything until the visitor has entered one
-//(see `requireAccess ()` in 'lib/functions.php'). does nothing if 'access.txt' is absent / empty.
-requireAccess ();
-
 /* common input
    ---------------------------------------------------------------------------------------------------------------------- */
 //most pages allow for a page number; note that this is merely the user-input, it is not necessarily a valid page number!
@@ -170,6 +166,11 @@ foreach (array ('users/', 'lib/', 'themes/', 'cgi-bin/') as $_) if (PATH !== '' 
 @chdir (FORUM_DATA.PATH_DIR) or die ('Invalid path');
 //TODO: that should generate a 404, but we can't create a 404 in PHP that will send the server's provided 404 page.
 //      I may revist this if I create an NNF-provided 404 page
+
+//optional access gate: if an 'access.txt' governs this forum (this one, or an ancestor up to the root), block
+//everything until the visitor enters one of its passwords. no-op when no 'access.txt' applies.
+//(after `chdir` so it can see the current sub-forum; see `requireAccess ()` in 'lib/functions.php')
+requireAccess ();
 
 //was an input form submitted? (used to determine form error checking; this doesn't apply to the sign-in button)
 define ('FORM_SUBMIT', (isset ($_POST['x'], $_POST['y']) || isset ($_POST['submit_x'], $_POST['submit_y'])));
