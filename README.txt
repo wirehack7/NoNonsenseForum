@@ -21,6 +21,20 @@ How NoNonsense differs from other forums:
         No user ranks. Just pure discussion with none of the cruft.
 
 
+Quick start (Docker):
+------------------------------------------------------------------------
+If you have Docker installed, you can try NNF without installing PHP or
+Apache at all. From the root of a checkout of this repository:
+
+docker compose up -d
+
+Then visit <http://localhost:8080/>. See INSTALL.txt section [1.7] for
+details, including a note on write permissions.
+
+For a normal (non-Docker) install, or to customise the forum, see
+INSTALL.txt.
+
+
 Contents:
 ========================================================================
 [1]     Admin & Moderators

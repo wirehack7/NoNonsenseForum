@@ -1,0 +1,14 @@
+services:
+  forum:
+    build: .
+    # to use the image already published by CI instead of building locally, comment out "build" above and
+    # uncomment the line below (see '.github/workflows/docker-build.yml'):
+    #image: ghcr.io/wirehack7/nononsenseforum:latest
+    ports:
+      - "8080:80"
+    # NNF has no database -- threads, sub-forums and user credentials are just files living alongside the code
+    # (see README.txt), so persisting data means mounting the whole checkout itself, not a separate data folder.
+    # this also means `git pull` on the host is picked up immediately, without rebuilding the image
+    volumes:
+      - .:/var/www/html
+    restart: unless-stopped
