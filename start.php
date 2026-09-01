@@ -312,16 +312,6 @@ define ('LANG',
 @define ('THEME_HTML_ERROR',    $LANG[THEME_LANG]['corrupted']);
 
 
-// Creating anti spam class
-require_once 'lib/DNSBL.php';
-$dnsbl = new DNSBL();
-
-if (array_key_exists('HTTP_X_FORWARDED_FOR', $_SERVER)) {
-    define('visitor_ip', array_pop(explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'])));
-} else {
-	define('visitor_ip', $_SERVER['REMOTE_ADDR']);
-}
-
 /* send HTTP headers
    ====================================================================================================================== */
 //stop browsers caching, so you don’t have to refresh every time to see changes
