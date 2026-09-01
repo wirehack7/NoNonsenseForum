@@ -28,6 +28,16 @@ define ('CAN_POST', FORUM_ENABLED && (
 //has the user submitted a new thread?
 //(`AUTH` will be true if username and password submitted and correct, `TITLE` and `TEXT` are checked to not be blank)
 if (CAN_POST && AUTH && TITLE && TEXT) {
+        
+        // check spam
+        if(CHECKSPAM == true)
+        {
+                if($dnsbl->CheckSpamIP(visitor_ip, SPAMVENDOR))
+                {
+                        require FORUM_LIB.'error_spam.php';
+                }
+        
+        }
         //the file on disk is a simplified version of the title; see 'lib/functions.php' for `safeTransliterate`
         $translit = safeTransliterate (TITLE);
         

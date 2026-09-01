@@ -380,6 +380,16 @@ if (isset ($_GET['delete'])) {
    ====================================================================================================================== */
 //was the submit button clicked? (and is the info valid?)
 if (CAN_REPLY && AUTH && TEXT) {
+        
+        // check spam
+        if(CHECKSPAM == true)
+        {
+                if($dnsbl->CheckSpamIP(visitor_ip, SPAMVENDOR))
+                {
+                        require FORUM_LIB.'error_spam.php';
+                }
+        
+        }
         //get a read/write lock on the file so that between now and saving, no other posts could slip in
         //normally we could use a write-only lock 'c', but on Windows you can't read the file when write-locked!
         $f = fopen ("$FILE.rss", 'r+'); flock ($f, LOCK_EX);
