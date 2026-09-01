@@ -33,16 +33,12 @@ as root, it installs Docker + Tor, clones this repo, brings up the loopback‑on
 stack and creates the v3 onion services:
 
 ```sh
-curl -fsSLO https://raw.githubusercontent.com/wirehack7/NoNonsenseForum/master/deploy-onion.sh
+curl -fsSLO https://raw.githubusercontent.com/wirehack7/NoNonsenseForum/refs/heads/master/deploy-onion.sh
+less deploy-onion.sh                # read it before you run it
 sudo bash deploy-onion.sh          # prints your .onion when done
-# once you can reach the box over the SSH onion it printed:
+# once you have connected over the SSH onion it printed and confirmed it works:
 sudo HARDEN=1 bash deploy-onion.sh # applies the default-deny firewall
 ```
-
-> While this branch isn't merged to `master` yet, fetch the script from it and
-> pass the branch through:
-> `curl -fsSLO https://raw.githubusercontent.com/wirehack7/NoNonsenseForum/development/deploy-onion.sh`
-> then `sudo REPO_BRANCH=development bash deploy-onion.sh`.
 
 That gets the service **running**. It does **not** make the operation
 *anonymous* — the server still has to be acquired, paid for, and administered
