@@ -198,22 +198,49 @@ docker compose up -d
 
 *       NNF has no database -- threads, sub-forums, "config.php" and the
         "users" folder are all just files, stored alongside the code
-        itself (see README.txt). "docker-compose.yml" therefore mounts
-        the whole checkout into the container, rather than a separate
-        data folder. This also means a `git pull` on the host (see
-        section [1.4] above) is picked up immediately, without having
-        to rebuild the image
+        itself (see README.txt). "docker-compose.yml" persists these in
+        two different ways, depending on whether a fixed, predictable
+        path exists for them:
+        -       Threads and sub-forums *don't* have one: a thread is
+                just a file, created wherever a sub-forum folder happens
+                to exist (including nowhere at all, i.e. the web-root
+                itself), under a name derived from its title -- there's
+                no single "posts" folder Docker could mount. These (and
+                the application code itself, kept in sync with the image
+                on every container start -- see 'docker-entrypoint.sh')
+                live in a named Docker volume instead of a folder on
+                your machine
+        -       "config.php" and the "users" folder *do* have a fixed
+                path, so these are bind-mounted directly to files/folders
+                right in your checkout ("./config.php", "./users") --
+                directly visible, editable and backupable on the host,
+                and preserved even if the volume above is later wiped
+                (see the `docker compose down -v` warning below)
 
-*       The container's web server needs write access to the checkout to
-        save new threads and register users. If you get a "Permission
-        Denied" error when posting, make the folder writable by the
-        container (its web server runs as UID/GID 33, "www-data"):
+*       Before the first `docker compose up`, create "config.php" so
+        Docker mounts it as a file rather than accidentally creating it
+        as an empty folder (this only matters for "config.php" -- the
+        "users" folder is created automatically if missing):
 
-chown -R 33:33 .
+cp config.default.php config.php
 
-        ...or, for a quicker but less strict fix:
+*       Because "config.php" / "users" are bind-mounted, the container
+        will change their on-disk ownership (to its own UID/GID 33,
+        "www-data") the first time it starts. If you need to edit
+        "config.php" afterwards and get a permission error doing so as
+        yourself, either run the edit through the container instead:
 
-chmod -R o+w .
+docker compose exec forum vi config.php
+
+        ...or reclaim ownership on the host (Linux/macOS):
+
+sudo chown -R "$(id -u):$(id -g)" config.php users
+
+*       "docker compose down -v" wipes the named volume -- i.e. every
+        thread and sub-forum -- back to nothing. "config.php" and
+        "users" (being bind mounts, not part of that volume) are *not*
+        affected and don't need backing up separately from the rest of
+        your checkout
 
 *       To use the image already built and published by this project's
         own CI (see '.github/workflows/docker-build.yml') instead of
@@ -221,9 +248,10 @@ chmod -R o+w .
         the comments within it
 
 *       This is just a convenient way to *run* NNF with the correct PHP
-        / Apache environment -- everything in section [2] "Customising"
-        below still applies the same way, by editing the files in your
-        checkout directly, same as any non-Docker install
+        / Apache environment and a persistent volume already wired up --
+        everything in section [2] "Customising" below still applies the
+        same way, just from inside the container (as shown above) rather
+        than by editing files in a checkout directly
 
 
 [2]     Customising:

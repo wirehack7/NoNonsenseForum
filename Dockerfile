@@ -14,13 +14,27 @@ RUN apt-get update \
 RUN a2enmod rewrite headers expires deflate \
     && sed -ri -e 's!AllowOverride None!AllowOverride All!g' /etc/apache2/apache2.conf
 
-WORKDIR /var/www/html
-COPY . /var/www/html/
+# the code is staged here, *not* copied straight into /var/www/html: NNF saves new threads, sub-forums, and user
+# credential files directly into its own web-root (it has no database -- see README.txt), so /var/www/html is
+# meant to be a persistent volume. 'docker-entrypoint.sh' copies this staged code into that volume on every
+# container start, which both seeds it on a first run and keeps the code up to date on later ones, without ever
+# touching data that's already there.
+# only NNF's own application files are staged (the same set the project's own ".gitignore" whitelists) -- not the
+# Dockerfile, this entrypoint script, CI config, or other dev tooling, none of which have any business being
+# copied into, and thus served out of, the web-root
+COPY .htaccess robots.txt favicon.default.ico apple-touch-icon.default.png metro-tile.default.png \
+     config.default.php index.php start.php thread.php markup.php privacy.php search.php \
+     LICENCE.txt README.txt INSTALL.txt HISTORY.txt \
+     /usr/src/nnf/
+# directories have to be copied individually -- `COPY` copies a directory *source*'s contents into the destination
+# rather than the directory itself, so mixing them into the multi-source COPY above would flatten them
+COPY lib    /usr/src/nnf/lib/
+COPY themes /usr/src/nnf/themes/
+COPY users  /usr/src/nnf/users/
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# the forum saves new threads, sub-forums and user credential files into its own folder, so the web server user
-# needs write access there, not just read access
-RUN chown -R www-data:www-data /var/www/html \
-    && find /var/www/html -type d -exec chmod 755 {} \; \
-    && find /var/www/html -type f -exec chmod 644 {} \;
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["apache2-foreground"]
 
 EXPOSE 80

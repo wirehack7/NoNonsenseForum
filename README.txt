@@ -26,10 +26,13 @@ Quick start (Docker):
 If you have Docker installed, you can try NNF without installing PHP or
 Apache at all. From the root of a checkout of this repository:
 
+cp config.default.php config.php
 docker compose up -d
 
-Then visit <http://localhost:8080/>. See INSTALL.txt section [1.7] for
-details, including a note on write permissions.
+Then visit <http://localhost:8080/>. Threads / sub-forums persist in a
+Docker volume; "config.php" and the "users" folder are your own files,
+right there in the checkout -- see INSTALL.txt section [1.7] for
+details, including how these interact with `docker compose down -v`.
 
 For a normal (non-Docker) install, or to customise the forum, see
 INSTALL.txt.

@@ -42,3 +42,4 @@
 !Dockerfile
 !.dockerignore
 !docker-compose.yml
+!docker-entrypoint.sh
