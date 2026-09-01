@@ -218,7 +218,7 @@ if ((   //if HTTP authentication is used, we don’t need to validate the form f
                         userCreate ($user, PASS) or require FORUM_LIB.'error_permissions.php';
                         define ('AUTH', true);
                 } else {
-                        define ('AUTH', userVerify ($user, PASS, $name.PASS) === true);
+                        define ('AUTH', userVerify ($user, PASS, $name) === true);
                 }
                 define ('ANON', false);
         } else {
