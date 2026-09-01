@@ -158,10 +158,15 @@ FileETag None
 	
 	# don’t allow any access to '/users' (this is accessed purely from the PHP)
 	RewriteRule ^users/.*$ - [NC,F]
-	
+
 	# don’t allow forum access to users / themes / lib folder
 	RewriteCond %{QUERY_STRING} path=(?:themes|users|lib) [NC]
 	RewriteRule ^ - [F]
+
+	# never serve dotfiles / dot-folders (".git", ".github", ".htaccess" itself, a stray ".env" &c.) -- relevant if
+	# NNF is deployed by pointing the web-root directly at a full checkout (e.g. the Docker Compose setup, or simply
+	# cloning straight into the web-root) rather than an export of just the application files
+	RewriteRule (^|/)\. - [NC,F]
 	
 	# page numbers on the root forum
 	RewriteRule ^[:+](\d+)$ ?page=$1 [QSA,L]

@@ -22,6 +22,11 @@ v27     (in development)
         NOTE: 'theme.php' / the theme's HTML lost the "as_sitesearch" hidden field and the search box's "action" is
         now set centrally in `prepareTemplate ()`; if you have a custom theme, update its search form accordingly
         (the query field's `name` also changed, from "as_q" to "q")
+*       Added a Docker Compose setup ('docker-compose.yml', 'Dockerfile', 'docker-entrypoint.sh') for running NNF
+        (PHP + Apache) without installing PHP or a web server -- see INSTALL.txt section [1.7]. Threads /
+        sub-forums (which have no fixed, mountable path of their own -- see README.txt) persist in a named Docker
+        volume; "config.php" and the "users" folder (which do have a fixed path) are bind-mounted directly into
+        the checkout instead, so they survive even a `docker compose down -v`
 
 v26     22.FEB.15
 *       Fixed problems with transliteration when on PHP5.4 without all the necessary libs in place
