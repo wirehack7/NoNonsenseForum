@@ -470,9 +470,10 @@ function userCreate ($userFile, $password) {
 	return (bool) @file_put_contents ($userFile, password_hash ($password, FORUM_PASS_ALGO), LOCK_EX);
 }
 
-//check a submitted password against a name's stored hash. $legacyInput is what the pre-`password_hash ()` format
-//hashed: "<name-hash>.<password>". returns true / false, or NULL if the name isn't registered.
-function userVerify ($userFile, $password, $legacyInput) {
+//check a submitted password against a name's stored hash. $nameHash is hash ('sha512', strtolower (name)) -- the
+//pre-`password_hash ()` format hashed "<name-hash><password>". returns true / false, or NULL if the name isn't
+//registered.
+function userVerify ($userFile, $password, $nameHash) {
 	$stored = trim ((string) @file_get_contents ($userFile));
 	if ($stored === '') return null;
 
@@ -483,7 +484,7 @@ function userVerify ($userFile, $password, $legacyInput) {
 		return true;
 	}
 
-	if (!hash_equals ($stored, hash ('sha512', $legacyInput))) return false;   //- legacy sha512 hex
+	if (!hash_equals ($stored, hash ('sha512', $nameHash.$password))) return false;   //- legacy sha512 hex
 	@file_put_contents ($userFile, password_hash ($password, FORUM_PASS_ALGO), LOCK_EX);   //- upgrade in place
 	return true;
 }
