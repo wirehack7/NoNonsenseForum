@@ -460,23 +460,22 @@ function spamTokenValid ($token, $min_age=3, $max_age=21600 /* 6 hours */) {
 
 /* access gate
    ====================================================================================================================== */
-/* if the "users" folder contains an 'access.txt' listing one or more passwords, a visitor has to supply one of them
-   -- ANY single one is enough, they are not entered in sequence -- before they can reach the forum at all. This is
-   separate from user sign-in: it's a shared "door" password you can hand out and revoke. Each line is one password;
-   remove a line and everyone who used that one is locked out again (the pass-cookie is bound to the exact line).
-   Lines may be plain text or a `password_hash ()` string. Blank lines and lines starting with '#' are ignored, and
-   an entry may carry a trailing " # label" (whitespace, then '#', then anything) so you can note who each password
-   was given to -- the label is stripped before the password is used. A literal " #" can't appear in a plain-text
-   password (use a hash if you need one). 'manage-access.sh' in the repo generates, lists and removes entries.
-   The file lives in the "users" folder (not the web-root) so it is never served -- the same reason the password
-   hashes and '.spam_secret' live there. */
+/* an 'access.txt' file placed in the forum root -- or in any sub-forum folder, alongside 'mods.txt' / 'locked.txt'
+   -- lists one or more passwords. A visitor must supply ONE of them (any single one, not all, not in sequence)
+   before they can see that forum or anything under it. The nearest 'access.txt' walking up from the current
+   sub-forum to the root is the one that applies, so a root 'access.txt' locks the whole site while a sub-forum
+   'access.txt' locks just that branch (and overrides an ancestor's for that branch).
 
-//the list of currently-valid door passwords (empty array if the gate is off)
-function accessPasswords () {
-        $lines = @file (
-                FORUM_DATA.DIRECTORY_SEPARATOR.FORUM_USERS.DIRECTORY_SEPARATOR.'access.txt',
-                FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES
-        );
+   Separate from user sign-in: it's a shared "door" password you hand out and revoke. Each line is one password;
+   remove a line and everyone who used it is locked out of that forum again (the pass-cookie is bound to the exact
+   line). Lines may be plain text or a `password_hash ()` string. Blank lines and lines starting with '#' are
+   ignored, and an entry may carry a trailing " # label" (whitespace, then '#', then anything) so you can note who
+   each password was given to -- stripped before use. A plain-text password can't contain " #" (use a hash).
+   'tools/manage-access.sh' generates, lists and removes entries. ".htaccess" blocks the file from being served. */
+
+//parse an 'access.txt': its passwords, in order (empty array if missing / blank)
+function accessFileEntries ($path) {
+        $lines = @file ($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         if (!$lines) return array ();
         $out = array ();
         foreach ($lines as $line) {
@@ -486,13 +485,30 @@ function accessPasswords () {
         return $out;
 }
 
+//the access gate that applies to the forum currently being viewed: the nearest 'access.txt' from the current
+//sub-forum up to the root. returns array (scope, passwords) -- scope is the governing folder relative to the site
+//root ('' for root) -- or NULL if no gate applies.
+function accessGate () {
+        $root = rtrim (FORUM_DATA, '/\\');
+        for ($dir = rtrim (FORUM_DATA.PATH_DIR, '/\\'); ; $dir = dirname ($dir)) {
+                if ($pw = accessFileEntries ($dir.DIRECTORY_SEPARATOR.'access.txt'))
+                        return array (trim ((string) substr ($dir, strlen ($root)), '/\\'), $pw);
+                if ($dir === $root || strlen ($dir) <= strlen ($root)) return null;
+        }
+}
+
 //the pass-cookie value for a given password line (an HMAC, so it can't be forged, and it stops being valid the
-//moment that line is removed from 'access.txt')
+//moment that line is removed from its 'access.txt')
 function accessCookie ($password) {
         return hash_hmac ('sha256', $password, spamSecret ());
 }
 
-//does the visitor's 'nnf_access' cookie match one of the still-valid passwords?
+//the cookie name for a gate scope -- so passing one sub-forum's gate doesn't disturb another's
+function accessCookieName ($scope) {
+        return 'nnf_access_'.substr (hash ('sha256', (string) $scope), 0, 12);
+}
+
+//does $cookie match one of the still-valid passwords for this gate?
 function accessGranted (array $passwords, $cookie) {
         foreach ($passwords as $p) if (hash_equals (accessCookie ($p), (string) $cookie)) return true;
         return false;
@@ -510,17 +526,19 @@ function accessMatch (array $passwords, $input) {
         return '';
 }
 
-//the whole gate: called once from 'start.php'. a no-op unless 'access.txt' has passwords and the visitor hasn't
-//passed yet; otherwise it handles the submitted password or shows the gate page, and never returns.
+//the whole gate: called once from 'start.php'. a no-op unless an 'access.txt' governs the current forum and the
+//visitor hasn't passed it yet; otherwise it handles the submitted password or shows the gate page, and never returns.
 function requireAccess () {
-        $passwords = accessPasswords ();
-        if (!$passwords || accessGranted ($passwords, @$_COOKIE['nnf_access'])) return;
+        if (!$gate = accessGate ()) return;
+        list ($scope, $passwords) = $gate;
+        $cookie = accessCookieName ($scope);
+        if (accessGranted ($passwords, @$_COOKIE[$cookie])) return;
 
         $error = false;
         if (isset ($_POST['nnf_access_password'])) {
                 if (($match = accessMatch ($passwords, $_POST['nnf_access_password'])) !== '') {
                         setcookie (
-                                'nnf_access', accessCookie ($match), time () + 60*60*24*30,
+                                $cookie, accessCookie ($match), time () + 60*60*24*30,
                                 FORUM_PATH, $_SERVER['HTTP_HOST'], FORUM_HTTPS, true
                         );
                         //303 back to the same URL so a refresh / back-button doesn't re-submit the password

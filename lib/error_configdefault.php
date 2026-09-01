@@ -1,19 +1,5 @@
-<!DOCTYPE html>
-<title>Default Configuration File is Missing</title>
-<h1>NoNonsense Forum</h2>
-<h2>Error: Default Configuration File is Missing</h2>
-<p>
-	The file "config.default.php" is missing.
-	This file is required by NoNonsense Forum and is located in the root folder.
-</p>
-<dl>
-
-<dt><strong>Download and install a fresh copy of NoNonsense Forum:</strong></dt>
-<dd><p>
-	The "config.default.php" file is included with NoNonsense Forum. It sets configuration defaults, which you can
-	customise by making a copy of "config.default.php" and renaming to "config.php".
-	Remember to never modify or delete "config.default.php"!
-</p></dd>
-
-</dl>
-<?php exit (1); ?>
+<?php
+$nnf_error_title  = 'Forum not ready';
+$nnf_error_public = 'Part of this forum’s installation is missing. The administrator needs to reinstall it.';
+$nnf_error_log    = 'config.default.php is missing from the application directory ('.FORUM_ROOT.')';
+require FORUM_LIB.'error.php';

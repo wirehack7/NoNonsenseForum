@@ -366,13 +366,15 @@ too (§3.4, same idea under `/var/lib/tor/ssh/`).
 
 ### 5.2 (Optional) a shared password in front of the forum
 
-Independent of Tor client authorisation (§3.4), NNF can gate the whole site
-behind one or more shared passwords in `./data/users/access.txt` — any one lets
-a visitor in, delete a line to revoke it. Manage it with `tools/manage-access.sh`
-(`add` / `list` / `remove`); see `INSTALL.txt` §2.6. Client authorisation (§3.4) is stronger and
-also covers the `.rss` feeds — use that if the group is small and fixed; use
-`access.txt` if you need to hand a password to people without provisioning a
-Tor client key each time.
+Independent of Tor client authorisation (§3.4), NNF can gate the forum — or a
+single sub-forum — behind one or more shared passwords in an `access.txt`
+(`./data/access.txt` for the whole site, `./data/news/access.txt` for `/news`
+only). Any one password lets a visitor in; delete a line to revoke it. Manage
+it with `tools/manage-access.sh` (`add` / `list` / `remove`, `-f <sub-forum>`);
+see `INSTALL.txt` §2.6. Client authorisation (§3.4) is stronger and also covers
+the `.rss` feeds — use that if the group is small and fixed; use `access.txt` if
+you need to hand a password to people without provisioning a Tor client key each
+time, or to protect just one sub-forum.
 
 ### 5.3 Reject non‑`.onion` requests (Host‑header trap)
 

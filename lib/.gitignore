@@ -12,6 +12,7 @@
 !gate.php
 
 # error messages
+!error.php
 !error_apachever.php
 !error_configdefault.php
 !error_configtheme.php

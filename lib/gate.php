@@ -1,11 +1,13 @@
 <?php
-/* the access-gate page: shown by `requireAccess ()` in 'lib/functions.php' when 'access.txt' lists door passwords
-   and the visitor hasn't entered one yet. `$error` is true if a wrong password was just submitted. deliberately
-   self-contained (no theme, no external assets) so it works before anything else and can't be styled around. */
+/* the access-gate page: shown by `requireAccess ()` in 'lib/functions.php' when an 'access.txt' governs this forum
+   and the visitor hasn't entered one of its passwords yet. `$error` is true if a wrong password was just submitted;
+   `$scope` is the governing folder relative to the site root ('' = whole site). deliberately self-contained (no
+   theme, no external assets) so it works before anything else and can't be styled around. */
 header ('HTTP/1.1 403 Forbidden');
 header ('Content-Type: text/html; charset=utf-8');
 $action = htmlspecialchars ((string) @$_SERVER['REQUEST_URI'], ENT_QUOTES);
 $name   = htmlspecialchars (defined ('FORUM_NAME') ? FORUM_NAME : '', ENT_QUOTES);
+$where  = !empty ($scope) ? htmlspecialchars (str_replace (array ('/', '\\'), ' / ', $scope), ENT_QUOTES) : '';
 ?><!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="utf-8">
@@ -27,7 +29,10 @@ $name   = htmlspecialchars (defined ('FORUM_NAME') ? FORUM_NAME : '', ENT_QUOTES
 </style>
 </head><body>
 <form method="post" action="<?php echo $action; ?>">
-	<h1><?php echo $name ?: 'This forum is private'; ?></h1>
+	<h1><?php
+		echo $where !== '' ? ($name !== '' ? "$name &middot; $where" : $where)
+		                   : ($name !== '' ? $name : 'This forum is private');
+	?></h1>
 	<?php if (!empty ($error)) echo '<p class="err">Wrong password.</p>'; ?>
 	<input type="password" name="nnf_access_password" placeholder="Access password"
 	       autocomplete="current-password" autofocus required>

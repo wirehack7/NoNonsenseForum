@@ -36,14 +36,20 @@ v27     (in development)
         NOTE: existing Docker deployments must migrate the old named volume -- see INSTALL.txt section [1.7].
         NOTE: custom themes -- 'nnf.conf' exposes the theme folder to the browser at "/themes"; a per-instance
         theme override now means rebuilding the image or adding your own mount
-*       Optional access gate: put one or more passwords in "users/access.txt" (one per line) and the whole forum
-        sits behind them -- a visitor enters ANY one of them (not all, not in sequence) and a 30-day cookie keeps
-        them in. Separate from user sign-in; it's a shared "door" password you can hand out per person/group and
-        revoke individually (delete a line -> everyone who used that password is locked out again, others
-        unaffected). Lines may be plain text or a `password_hash ()` string, and may carry a trailing " # label"
-        so you can tell entries apart. The 'tools/manage-access.sh' script generates / lists / removes them. See
-        INSTALL.txt section [2.6]. (Does not cover direct requests for the static ".rss"/".xml" feeds -- those
-        never run PHP.)
+*       Optional access gate: an "access.txt" in the forum root -- OR in any sub-forum folder, next to "mods.txt"
+        -- lists one or more passwords, and a visitor must enter ANY one of them (not all, not in sequence) to see
+        that forum and everything under it. The nearest "access.txt" up the folder chain applies, so you can lock
+        the whole site or just one branch; each scope has its own 30-day cookie. Separate from user sign-in; hand
+        passwords out per person/group and revoke them individually (delete a line). Plain text or "password_hash ()"
+        values, optional trailing " # label". "tools/manage-access.sh" (with "-f <sub-forum>") manages the file.
+        See INSTALL.txt section [2.6]. (Does not cover direct requests for the static ".rss"/".xml" feeds.)
+*       Error pages rewritten: the visitor now sees a short, generic message with no server paths, folder names,
+        config-option names or software versions; the real detail goes to the server error log instead (shared
+        'lib/error.php'). The Docker image also turns PHP "display_errors" off, so a stray warning can't leak a
+        file path either.
+*       Docker: the data bind-mount is now declared with ":z" (SELinux relabel; harmless elsewhere) and the
+        entrypoint checks the web user can actually write to the data directory, printing a specific diagnostic
+        to the container log if not -- this is the usual cause of "Unable to Save; Permission Denied" on first run.
 *       ".htaccess" now blocks direct web access to "mods.txt" / "members.txt" / "locked.txt" / "sticky.txt" /
         "access.txt", to "tools/" and to any ".sh" -- these are only ever used server-/host-side. ("about.html"
         and "robots.txt" are still served.)

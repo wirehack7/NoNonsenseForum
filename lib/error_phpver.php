@@ -1,18 +1,6 @@
-<!DOCTYPE html>
-<title>PHP 5.2.3 Required</title>
-<h1>NoNonsense Forum</h2>
-<h2>Error: PHP 5.2.3 Required</h2>
-<p>
-	A minimum PHP version of 5.2.3 is required to run NoNonsense Forum.
-	Your server reports it has version <?php echo PHP_VERSION ?>.
-</p>
-<dl>
-
-<dt><strong>Check your hosting control panel for a version switch:</strong></dt>
-<dd><p>
-	With some hosting companies you can switch between PHP 5.2 and PHP 5.3.<br />
-	Check your hosting control panel, or contact your hosting company for support.
-</p></dd>
-
-</dl>
-<?php exit (1); ?>
+<?php
+$nnf_error_title  = 'Forum not ready';
+$nnf_error_public = 'The server this forum runs on needs to be updated before it can work. '
+                  . 'If you’re the administrator, check the server software.';
+$nnf_error_log    = 'PHP '.PHP_VERSION.' is too old; NoNonsense Forum needs PHP 5.2.3 or newer (7.0+ recommended)';
+require FORUM_LIB.'error.php';

@@ -2,54 +2,58 @@
 
 use PHPUnit\Framework\TestCase;
 
-/* covers the optional access gate in 'lib/functions.php' (`accessPasswords` / `accessMatch` / `accessCookie` /
-   `accessGranted`) -- the shared "door" password(s) that can sit in front of the whole forum, see 'HISTORY.txt' */
+/* covers the optional access gate in 'lib/functions.php' -- the shared "door" password(s) that can sit in front of
+   the whole forum or an individual sub-forum ('access.txt'), see 'HISTORY.txt' */
 final class AccessGateTest extends TestCase {
 
-    private string $file;
+    private string $root;
+    private string $sub;
+
+    public static function setUpBeforeClass (): void {
+        //`accessGate ()` walks up from the current sub-forum; pretend we're viewing "/sub/"
+        if (!defined ('PATH_DIR')) define ('PATH_DIR', DIRECTORY_SEPARATOR.'sub'.DIRECTORY_SEPARATOR);
+    }
 
     protected function setUp (): void {
-        $this->file = FORUM_DATA.DIRECTORY_SEPARATOR.FORUM_USERS.DIRECTORY_SEPARATOR.'access.txt';
+        $this->root = FORUM_DATA.DIRECTORY_SEPARATOR.'access.txt';
+        $this->sub  = FORUM_DATA.DIRECTORY_SEPARATOR.'sub'.DIRECTORY_SEPARATOR.'access.txt';
+        @mkdir (dirname ($this->sub), 0777, true);
     }
 
     protected function tearDown (): void {
-        @unlink ($this->file);
+        @unlink ($this->root);
+        @unlink ($this->sub);
     }
 
-    private function writeAccess (string $contents): void {
-        file_put_contents ($this->file, $contents);
+    /* --- parsing ------------------------------------------------------------------------------------------------ */
+
+    public function testMissingFileYieldsNoPasswords (): void {
+        $this->assertSame (array (), accessFileEntries ($this->root));
     }
 
-    public function testGateIsOffWhenFileMissing (): void {
-        $this->assertSame (array (), accessPasswords ());
-    }
-
-    public function testPasswordsAreParsedIgnoringBlanksCommentsAndWhitespace (): void {
-        $this->writeAccess ("hunter2\n\n  spaced-out  \n# a comment\nletmein\n");
-        $this->assertSame (array ('hunter2', 'spaced-out', 'letmein'), accessPasswords ());
-    }
-
-    public function testTrailingLabelIsStrippedButInlineHashIsKept (): void {
-        $this->writeAccess (
+    public function testEntriesParsedIgnoringBlanksCommentsAndLabels (): void {
+        file_put_contents ($this->root,
+            "hunter2\n" .
+            "\n" .
+            "  spaced-out  \n" .
+            "# a whole-line comment\n" .
             "\$2y\$10\$abcdefghijklmnopqrstuv  # Alice, 2026-09-01\n" .
-            "pa#ss\n" .                      //- '#' with no leading space is part of the password
-            "plain   #   the meetup\n"
+            "pa#ss\n"                        //- '#' with no leading space stays part of the password
         );
         $this->assertSame (
-            array ('$2y$10$abcdefghijklmnopqrstuv', 'pa#ss', 'plain'),
-            accessPasswords ()
+            array ('hunter2', 'spaced-out', '$2y$10$abcdefghijklmnopqrstuv', 'pa#ss'),
+            accessFileEntries ($this->root)
         );
     }
+
+    /* --- matching ----------------------------------------------------------------------------------------------- */
 
     public function testAnyOnePlaintextPasswordMatches (): void {
         $pw = array ('alpha', 'bravo', 'charlie');
-        $this->assertSame ('bravo', accessMatch ($pw, 'bravo'));
+        $this->assertSame ('bravo',   accessMatch ($pw, 'bravo'));
         $this->assertSame ('charlie', accessMatch ($pw, 'charlie'));
-    }
-
-    public function testWrongPasswordDoesNotMatch (): void {
-        $this->assertSame ('', accessMatch (array ('alpha', 'bravo'), 'delta'));
-        $this->assertSame ('', accessMatch (array ('alpha'), ''));
+        $this->assertSame ('',        accessMatch ($pw, 'delta'));
+        $this->assertSame ('',        accessMatch ($pw, ''));
     }
 
     public function testHashedPasswordLineMatches (): void {
@@ -58,17 +62,41 @@ final class AccessGateTest extends TestCase {
         $this->assertSame ('',    accessMatch (array ($hash), 'nope'));
     }
 
-    public function testCookieRoundTripsForAValidPassword (): void {
+    /* --- cookies ------------------------------------------------------------------------------------------------- */
+
+    public function testCookieRoundTripsAndCantBeForged (): void {
         $pw     = array ('alpha', 'bravo');
         $cookie = accessCookie (accessMatch ($pw, 'bravo'));
         $this->assertTrue  (accessGranted ($pw, $cookie));
-        $this->assertFalse (accessGranted ($pw, 'forged-cookie-value'));
+        $this->assertFalse (accessGranted ($pw, 'forged'));
         $this->assertFalse (accessGranted ($pw, ''));
     }
 
     public function testRemovingAPasswordInvalidatesItsCookie (): void {
         $cookie = accessCookie ('bravo');
-        $this->assertTrue  (accessGranted (array ('alpha', 'bravo'), $cookie));  //- still listed
-        $this->assertFalse (accessGranted (array ('alpha'),          $cookie));  //- 'bravo' revoked
+        $this->assertTrue  (accessGranted (array ('alpha', 'bravo'), $cookie));
+        $this->assertFalse (accessGranted (array ('alpha'),          $cookie));
+    }
+
+    public function testDifferentScopesGetDifferentCookieNames (): void {
+        $this->assertNotSame (accessCookieName (''), accessCookieName ('sub'));
+        $this->assertSame    (accessCookieName ('sub'), accessCookieName ('sub'));
+    }
+
+    /* --- scope resolution (accessGate walks up from PATH_DIR="/sub/") ------------------------------------------- */
+
+    public function testNoGateWhenNoAccessFileAnywhere (): void {
+        $this->assertNull (accessGate ());
+    }
+
+    public function testRootAccessFileGovernsASubForum (): void {
+        file_put_contents ($this->root, "sitewide\n");
+        $this->assertSame (array ('', array ('sitewide')), accessGate ());
+    }
+
+    public function testNearestAccessFileWins (): void {
+        file_put_contents ($this->root, "sitewide\n");
+        file_put_contents ($this->sub,  "sub-only\n");
+        $this->assertSame (array ('sub', array ('sub-only')), accessGate ());
     }
 }

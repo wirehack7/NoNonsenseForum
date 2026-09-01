@@ -16,6 +16,21 @@ cp /var/www/nnf/.htaccess.docker "$NNF_DATA_DIR/.htaccess"
 # seed "config.php" once, so a fresh volume works out of the box; never overwrite an existing one
 [ -f "$NNF_DATA_DIR/config.php" ] || cp /var/www/nnf/config.default.php "$NNF_DATA_DIR/config.php"
 
-chown -R www-data:www-data "$NNF_DATA_DIR"
+chown -R www-data:www-data "$NNF_DATA_DIR" 2>/dev/null \
+	|| echo "nnf: note: could not chown $NNF_DATA_DIR (rootless Docker / userns-remap?) -- continuing" >&2
+
+# make sure the web user can actually write there; posting and sign-in fail silently to the visitor otherwise
+if ! su -s /bin/sh -c "test -w '$NNF_DATA_DIR' && test -w '$NNF_DATA_DIR/users'" www-data; then
+	cat >&2 <<EOF
+nnf: ERROR: $NNF_DATA_DIR is not writable by the web server (user www-data).
+     Posting new threads and signing in will fail until this is fixed. Usual causes:
+       * SELinux host: add ":z" to the volume in docker-compose*.yml
+             - ./data:/var/www/html:z
+       * the host directory is owned by a user the container can't take over
+         (rootless Docker / userns-remap): chown it to UID 33 on the host, or
+         run the container with 'user: "0:0"'.
+       * the mount is read-only.
+EOF
+fi
 
 exec "$@"

@@ -1,17 +1,6 @@
-<!DOCTYPE html>
-<title>Apache 2.1 Required</title>
-<h1>NoNonsense Forum</h2>
-<h2>Error: Apache 2.1 Required</h2>
-<p>
-	A minimum Apache Server version of 2.1 is required to run NoNonsense Forum.
-	Your server reports it has version "<?php echo apache_get_version () ?>".
-</p>
-<dl>
-
-<dt><strong>Upgrade the Apache software, use a different server software (e.g IIS) or change hosting company:</strong></dt>
-<dd><p>
-	1&amp;1 hosting is known to be limited to Apache v1. You should change hosting company if using them.
-</p></dd>
-
-</dl>
-<?php exit (1); ?>
+<?php
+$nnf_error_title  = 'Forum not ready';
+$nnf_error_public = 'The web server this forum runs on needs to be updated before it can work. '
+                  . 'If you’re the administrator, check the server software.';
+$nnf_error_log    = 'Apache reports "'.@apache_get_version ().'"; NoNonsense Forum needs Apache 2.1 or newer';
+require FORUM_LIB.'error.php';
