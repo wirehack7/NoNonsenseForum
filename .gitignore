@@ -49,3 +49,4 @@
 !docker-entrypoint.sh
 !deploy-onion.sh
 !rotate-onion.sh
+!manage-access.sh

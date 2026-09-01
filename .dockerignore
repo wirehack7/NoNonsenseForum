@@ -15,4 +15,5 @@ docker-compose.yml
 docker-compose.tor.yml
 deploy-onion.sh
 rotate-onion.sh
+manage-access.sh
 TOR.md

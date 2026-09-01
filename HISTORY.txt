@@ -40,8 +40,12 @@ v27     (in development)
         sits behind them -- a visitor enters ANY one of them (not all, not in sequence) and a 30-day cookie keeps
         them in. Separate from user sign-in; it's a shared "door" password you can hand out per person/group and
         revoke individually (delete a line -> everyone who used that password is locked out again, others
-        unaffected). Lines may be plain text or a `password_hash ()` string. See INSTALL.txt section [2.6].
-        (Does not cover direct requests for the static ".rss"/".xml" feeds -- those never run PHP.)
+        unaffected). Lines may be plain text or a `password_hash ()` string, and may carry a trailing " # label"
+        so you can tell entries apart. The 'manage-access.sh' script generates / lists / removes them. See
+        INSTALL.txt section [2.6]. (Does not cover direct requests for the static ".rss"/".xml" feeds -- those
+        never run PHP.)
+*       ".htaccess" now blocks direct web access to "mods.txt" / "members.txt" / "locked.txt" / "sticky.txt" /
+        "access.txt" -- these are only ever read server-side. ("about.html" and "robots.txt" are still served.)
 *       Added 'TOR.md': a step-by-step guide to running NNF as a hidden-only Tor onion service via the Docker image
         (Tor on the host, the container's web port published to loopback only), covering anonymous provisioning,
         host hardening, admin-over-onion, keeping the clearnet IP from revealing that a forum runs there, and a

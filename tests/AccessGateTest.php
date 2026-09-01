@@ -29,6 +29,18 @@ final class AccessGateTest extends TestCase {
         $this->assertSame (array ('hunter2', 'spaced-out', 'letmein'), accessPasswords ());
     }
 
+    public function testTrailingLabelIsStrippedButInlineHashIsKept (): void {
+        $this->writeAccess (
+            "\$2y\$10\$abcdefghijklmnopqrstuv  # Alice, 2026-09-01\n" .
+            "pa#ss\n" .                      //- '#' with no leading space is part of the password
+            "plain   #   the meetup\n"
+        );
+        $this->assertSame (
+            array ('$2y$10$abcdefghijklmnopqrstuv', 'pa#ss', 'plain'),
+            accessPasswords ()
+        );
+    }
+
     public function testAnyOnePlaintextPasswordMatches (): void {
         $pw = array ('alpha', 'bravo', 'charlie');
         $this->assertSame ('bravo', accessMatch ($pw, 'bravo'));

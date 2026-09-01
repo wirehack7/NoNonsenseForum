@@ -128,6 +128,9 @@ FileETag None
 	# don’t allow any access to '/users' (this is accessed purely from the PHP)
 	RewriteRule ^users/.*$ - [NC,F]
 
+	# don’t serve NNF's plain-text config / state files (read server-side only)
+	RewriteRule (^|/)(mods|members|locked|sticky|access)\.txt$ - [NC,F]
+
 	# don’t allow forum access to users / themes / lib folder
 	RewriteCond %{QUERY_STRING} path=(?:themes|users|lib) [NC]
 	RewriteRule ^ - [F]

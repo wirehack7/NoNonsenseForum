@@ -118,7 +118,7 @@ Members can post in a locked forum but have no moderator powers.
 
 NNF has two ways to keep people out:
 
-1. **`access.txt` — a shared door password (built in).** Put one or more passwords (one per line) in `users/access.txt` and the whole site sits behind a password prompt. Any one password grants access; delete a line to revoke it. Lines may be plain text or a `password_hash()` string. See [`INSTALL.txt`](INSTALL.txt) §2.6. This does **not** cover direct requests for the static `.rss` / `.xml` feed files (the web server serves those without running PHP).
+1. **`access.txt` — a shared door password (built in).** Put one or more passwords (one per line) in `users/access.txt` and the whole site sits behind a password prompt. Any one password grants access; delete a line to revoke it. Each line can carry a `# label` so you can tell them apart. Lines may be plain text or a `password_hash()` string. The [`manage-access.sh`](manage-access.sh) script generates, lists and removes entries for you. See [`INSTALL.txt`](INSTALL.txt) §2.6. This does **not** cover direct requests for the static `.rss` / `.xml` feed files (the web server serves those without running PHP).
 
 2. **`.htpasswd` — web-server auth (covers the feeds too).** Protect the relevant directory with HTTP Basic auth at the Apache level. The users in `.htpasswd` must have the same password as their NNF username. Setting this up needs some `.htaccess` knowledge and isn't covered here.
 
@@ -126,9 +126,10 @@ For a Tor onion service, **onion client authorisation** (see [`TOR.md`](TOR.md) 
 
 ## Are the `.txt` files web-readable?
 
-- `mods.txt`, `members.txt`, `locked.txt`, `sticky.txt` and `about.html` **are** served directly (e.g. `/mods.txt`) — but they contain nothing secret (the mod/member names are already shown in the page footer).
+- `mods.txt`, `members.txt`, `locked.txt`, `sticky.txt` and `access.txt` are **blocked** by `.htaccess` (they're only read server-side). They hold nothing secret anyway — except `access.txt`, which is why it lives in the already-locked-down `users/` folder.
 - `config.php` is executed, not served, so its contents aren't exposed.
-- `users/` — the password hashes, the anti-spam secret and `access.txt` — is blocked by `.htaccess`. If you run **without** `.htaccess`, you must relocate the `users` folder (NNF tells you how); prefer `password_hash()` values in `access.txt` in that case.
+- `users/` — password hashes, the anti-spam secret, `access.txt` — is blocked by `.htaccess`. If you run **without** `.htaccess`, you must relocate the `users` folder (NNF tells you how) and should use `password_hash()` values in `access.txt`.
+- `about.html` is served, but it's meant to be public — its contents are shown on the forum index anyway.
 
 ## Acknowledgements
 

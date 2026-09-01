@@ -364,9 +364,9 @@ too (§3.4, same idea under `/var/lib/tor/ssh/`).
 ### 5.2 (Optional) a shared password in front of the forum
 
 Independent of Tor client authorisation (§3.4), NNF can gate the whole site
-behind one or more shared passwords: put them, one per line, in
-`./data/users/access.txt`. Any one lets a visitor in; delete a line to revoke
-that one. See `INSTALL.txt` §2.6. Client authorisation (§3.4) is stronger and
+behind one or more shared passwords in `./data/users/access.txt` — any one lets
+a visitor in, delete a line to revoke it. Manage it with `./manage-access.sh`
+(`add` / `list` / `remove`); see `INSTALL.txt` §2.6. Client authorisation (§3.4) is stronger and
 also covers the `.rss` feeds — use that if the group is small and fixed; use
 `access.txt` if you need to hand a password to people without provisioning a
 Tor client key each time.

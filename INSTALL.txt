@@ -331,11 +331,12 @@ theme) create a 'custom.css' file and it will be automatically included.
 To put the entire forum behind a shared password, create an 'access.txt'
 file inside the "users" folder (the same private folder that holds the
 password hashes -- NOT the web-root, so the file itself is never served)
-and put one password per line:
+with one password per line. Each line may carry a trailing " # label" so
+you can tell entries apart later:
 
-    correct-horse-battery-staple
-    # lines starting with '#' and blank lines are ignored
-    another-handout-password
+    $2y$12$Rk9....hash....  # Alice, in person
+    hunter2                 # the meetup, temp
+    # blank lines and lines starting with '#' are ignored
 
 Any ONE of the listed passwords lets a visitor in -- they are not
 entered one after another. A visitor enters a password once and a cookie
@@ -347,9 +348,16 @@ line -- everyone who used that specific password is locked out again on
 their next request (other passwords and their users are unaffected).
 
 Lines may be plain text, or a PHP `password_hash ()` string (recommended
-if you're worried about the file's contents leaking):
+-- if the file ever leaks, the passwords don't). A plain-text password
+cannot contain the two characters " #" (space then hash); use a hash if
+you need to.
 
-    php -r 'echo password_hash("the-password", PASSWORD_DEFAULT), "\n";'
+The 'manage-access.sh' script in the repo does all of this for you:
+
+    ./manage-access.sh add "Alice"      generate a password, hash it, add it
+    ./manage-access.sh add "temp" pw    add a password you chose
+    ./manage-access.sh list             show the labels (not the passwords)
+    ./manage-access.sh remove 2         revoke entry #2
 
 Delete 'access.txt' (or empty it) to switch the gate off. It has no
 effect on direct requests for the ".rss" / ".xml" feed files, which the

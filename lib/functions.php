@@ -464,9 +464,12 @@ function spamTokenValid ($token, $min_age=3, $max_age=21600 /* 6 hours */) {
    -- ANY single one is enough, they are not entered in sequence -- before they can reach the forum at all. This is
    separate from user sign-in: it's a shared "door" password you can hand out and revoke. Each line is one password;
    remove a line and everyone who used that one is locked out again (the pass-cookie is bound to the exact line).
-   Lines may be plain text or a `password_hash ()` string; blank lines and lines starting with '#' are ignored.
-   It lives in the "users" folder (not the web-root) so the file itself is never served -- the same reason the
-   password hashes and '.spam_secret' live there. */
+   Lines may be plain text or a `password_hash ()` string. Blank lines and lines starting with '#' are ignored, and
+   an entry may carry a trailing " # label" (whitespace, then '#', then anything) so you can note who each password
+   was given to -- the label is stripped before the password is used. A literal " #" can't appear in a plain-text
+   password (use a hash if you need one). 'manage-access.sh' in the repo generates, lists and removes entries.
+   The file lives in the "users" folder (not the web-root) so it is never served -- the same reason the password
+   hashes and '.spam_secret' live there. */
 
 //the list of currently-valid door passwords (empty array if the gate is off)
 function accessPasswords () {
@@ -475,10 +478,12 @@ function accessPasswords () {
                 FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES
         );
         if (!$lines) return array ();
-        return array_values (array_filter (
-                array_map ('trim', $lines),
-                function ($line) { return $line !== '' && $line[0] !== '#'; }
-        ));
+        $out = array ();
+        foreach ($lines as $line) {
+                $line = trim ((string) preg_replace ('/\s+#.*$/s', '', $line));  //- drop a trailing " # label"
+                if ($line !== '' && $line[0] !== '#') $out[] = $line;   //- skip blank lines and full-line comments
+        }
+        return $out;
 }
 
 //the pass-cookie value for a given password line (an HMAC, so it can't be forged, and it stops being valid the
