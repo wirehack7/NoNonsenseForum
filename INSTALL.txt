@@ -202,7 +202,7 @@ docker compose up -d
         The forum will then be available at <http://localhost:8080/>
 
 *       NNF has no database -- threads, sub-forums, "config.php" and the
-        "users" folder are all just files (see README.txt). Normally NNF
+        "users" folder are all just files (see README.md). Normally NNF
         writes them straight into its own code directory; the Docker
         image instead keeps the two apart. The code is baked into the
         image at "/var/www/nnf" (outside the web-root) and the web-root
