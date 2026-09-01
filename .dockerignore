@@ -1,0 +1,11 @@
+.git
+.github
+vendor
+tests
+composer.json
+composer.lock
+phpunit.xml
+phpstan.neon
+phpstan-bootstrap.php
+.phpunit.result.cache
+config.php

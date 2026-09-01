@@ -96,7 +96,18 @@ function prepareTemplate (
         if (!file_exists (THEME_ROOT.'custom.css')) $template->remove ('//link[contains(@href,"custom.css")]');
         //set the canonical URL
         if ($canonical) $template->setValue ('/html/head/meta[@rel="canonical"]/@href', $canonical);
-        
+        //the built-in search box: point it at 'search.php' (respecting a sub-folder install, like every other link),
+        //or remove it entirely if the admin has switched it off (`FORUM_SEARCH` in 'config.php')
+        if (FORUM_SEARCH) {
+                $template->setValue ('#search@action', FORUM_PATH.'search.php');
+                $template->setValue ('#query@value', (string) @$_GET['q']);
+        } else {
+                $template->remove ('#search');
+        }
+        //if this template has a posting form on it, fill in this render's anti-spam token (see 'spamToken', above --
+        //no-ops harmlessly on templates without one, such as 'privacy.html' / 'markup.html')
+        $template->setValue ('input#nnf_spamtoken-field@value', spamToken ());
+
         /* site header
            -------------------------------------------------------------------------------------------------------------- */
         //site title
@@ -400,6 +411,53 @@ function unformatText ($text) {
 
 /* ====================================================================================================================== */
 
+/* anti-spam / bot protection
+   ====================================================================================================================== */
+/* NNF has always used a honeypot field ("email", see the theme's HTML) as its only defence: a hidden input that real
+   visitors never see or fill in, but that simple bots do. This is not enough on its own -- because NNF is open source,
+   a bot author can just read the code, learn the field's name and expected value, and pre-fill it correctly every time.
+
+   `spamToken` / `spamTokenValid` add a second, independent layer that can't be defeated by reading the source: every
+   form embeds a timestamp signed with a secret that is generated once per install and never appears in the code or the
+   HTML, only its signature does. A submission is only accepted if the signature checks out (proving the form really
+   was served by this install a moment ago) *and* it wasn't submitted implausibly fast for a human to have typed a
+   message (bots tend to submit within milliseconds) *or* implausibly long after the page was loaded (stops a stock of
+   pre-fetched tokens being reused indefinitely). No CAPTCHA, no JavaScript, no IP logging -- keeping with NNF's
+   "no hoops to jump through" philosophy, and working equally well for visitors on Tor / an onion service, where a
+   visitor's IP address is not meaningful and shouldn't be relied upon anyway. */
+
+//a random secret, unique to this install, used to sign the anti-spam token. generated on first use and stored
+//alongside the user password files (private: outside the web-root when `FORUM_USERS` is relocated, and denied by
+//".htaccess" in the default location) so that it never appears anywhere in NNF's public source or HTML
+function spamSecret () {
+        static $secret = null;
+        if ($secret !== null) return $secret;
+
+        $file = FORUM_ROOT.DIRECTORY_SEPARATOR.FORUM_USERS.DIRECTORY_SEPARATOR.'.spam_secret';
+        if (!file_exists ($file)) @file_put_contents ($file, bin2hex (random_bytes (32)), LOCK_EX);
+
+        return $secret = (string) @file_get_contents ($file);
+}
+
+//produce a signed "time.signature" token to place in a hidden form field when a page is rendered
+function spamToken () {
+        $time = time ();
+        return $time.'.'.hash_hmac ('sha256', $time, spamSecret ());
+}
+
+//check a token submitted back from a form:
+//- the signature must match (proves the token was genuinely issued by this install, not guessed / forged)
+//- the form must not have been submitted implausibly fast (bots tend to submit near-instantly; humans take a moment
+//  to read the form and type a message)
+//- the form must not be implausibly old (stops a bot stockpiling valid tokens to use later)
+function spamTokenValid ($token, $min_age=3, $max_age=21600 /* 6 hours */) {
+        if (!preg_match ('/^([0-9]+)\.([0-9a-f]{64})$/', (string) $token, $m)) return false;
+        if (!hash_equals (hash_hmac ('sha256', $m[1], spamSecret ()), $m[2])) return false;
+
+        $age = time () - (int) $m[1];
+        return $age >= $min_age && $age <= $max_age;
+}
+
 //regenerate a folder's RSS file (all changes happening in a folder)
 function indexRSS () {
         /* create an RSS feed
@@ -461,14 +519,69 @@ function indexRSS () {
                 ))
                 //if you delete the last thread in a folder, there won’t be anything in the RSS index file!
                 if (@$rss->channel->item[0]) $sitemap->set (array (
-                        './x:loc'       => FORUM_URL.FORUM_PATH.($folder ? safeURL ("$folder/", false) : '').'index.xml',
+                        './x:loc'       => FORUM_URL.FORUM_PATH.($folder ? safeURL ("$folder/") : '').'index.xml',
                         './x:lastmod'   => gmdate ('r', strtotime ($rss->channel->item[0]->pubDate))
                 ))->next ()
         ;
         file_put_contents (FORUM_ROOT.DIRECTORY_SEPARATOR.'sitemap.xml', $xml);
-        
+
         //you saw nothing, right?
         clearstatcache ();
+}
+
+/* ====================================================================================================================== */
+
+/* site search
+   ====================================================================================================================== */
+//recursively search every thread on the whole forum (including sub-forums) for posts -- original posts or replies --
+//whose title, message text or author name contain *every* given search term (case-insensitive, Unicode-aware).
+//returns a flat, newest-post-first list of matching posts, each as an array of 'title' / 'author' / 'time' (a UNIX
+//timestamp) / 'snippet' (a plain-text excerpt) / 'link' (a ready-to-use URL, see `url ()`)
+//NOTE: like the rest of NNF, this has no index / cache to speak of -- it re-reads every thread on every search. that
+//      keeps it simple and always up to date (matching how e.g. `indexRSS ()` re-scans a whole folder on every post),
+//      at the cost of not scaling to a very large number of threads
+function searchThreads ($query) {
+        //split into individual words; a post must contain all of them (in any order) to be considered a match
+        $terms = array_filter (preg_split ('/\s+/u', mb_strtolower (safeTrim ($query))), 'strlen');
+        if (!$terms) return array ();
+
+        $results = array ();
+
+        //walks a folder and its sub-forums looking for matching posts. kept as a closure (rather than a second,
+        //public-looking function) since it's only ever meant to be called from here
+        $walk = function ($dir, $url_path) use (&$walk, &$results, $terms) {
+                foreach (preg_grep ('/\.rss$/', scandir ($dir) ?: array ()) as $file) if (
+                        $xml = @simplexml_load_file ($dir.DIRECTORY_SEPARATOR.$file)
+                ) foreach ($xml->channel->item as $item) {
+                        //plain-text version of the post, both to search within and to build the result snippet from
+                        $text     = unformatText ($item->description);
+                        $haystack = mb_strtolower ($item->title.' '.$text.' '.$item->author);
+
+                        //every term must be found somewhere in this post, else skip it
+                        foreach ($terms as $term) if (mb_stripos ($haystack, $term) === false) continue 2;
+
+                        $results[] = array (
+                                'title'   => (string) $item->title,
+                                'author'  => (string) $item->author,
+                                'time'    => strtotime ($item->pubDate),
+                                'snippet' => mb_substr (safeTrim ($text), 0, 200),
+                                //the thread's URL (respecting HTAccess / sub-folder installs, like everywhere else)
+                                //plus the "#post-id" fragment of this specific post, taken from its permalink
+                                'link'    => url ($url_path, pathinfo ($file, PATHINFO_FILENAME)).strstr ($item->link, '#')
+                        );
+                }
+
+                //recurse into sub-forums (the same folders excluded everywhere else that walks the site's structure)
+                foreach (array_filter (
+                        preg_grep ('/^(\.|users$|themes$|lib$|cgi-bin$)/', scandir ($dir) ?: array (), PREG_GREP_INVERT),
+                        function ($f) use ($dir) { return is_dir ($dir.DIRECTORY_SEPARATOR.$f); }
+                ) as $folder) $walk ($dir.DIRECTORY_SEPARATOR.$folder, $url_path.safeURL ($folder).'/');
+        };
+        $walk (FORUM_ROOT, '');
+
+        //newest post first, same ordering used throughout the rest of the forum
+        usort ($results, function ($a, $b) { return $b['time'] <=> $a['time']; });
+        return $results;
 }
 
 ?>

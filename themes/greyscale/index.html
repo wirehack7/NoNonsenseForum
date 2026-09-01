@@ -7,7 +7,6 @@
 	<title>NoNonsense Forum</title>
 	<!-- get rid of IE site compatibility button -->
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<!--[if lt IE 9]><script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
 	<link rel="stylesheet" href="/themes/greyscale/theme.css">
 	<link rel="stylesheet" href="/themes/greyscale/custom.css">
 	<link rel="alternate" type="application/rss+xml" href="index.xml">
@@ -32,9 +31,8 @@
 		--><span class="nnf_forum-name">NoNonsense Forum</span>
 	</a></h1>
 	
-	<form id="search" method="get" action="http://google.com/search"><!--
-		--><input type="hidden" name="as_sitesearch" value="forum.camendesign.com"><!--
-		--><input id="query" type="search" name="as_q" placeholder="Google Search…"><!--
+	<form id="search" method="get" action="search.php"><!--
+		--><input id="query" type="search" name="q" maxlength="100" placeholder="Search…" value=""><!--
 		--><input id="go" type="image" src="/themes/greyscale/img/go.png" width="20" height="20" alt="Search"><!--
 	--></form>
 	
@@ -127,6 +125,7 @@
 			       autocomplete="off" required value="example@abc.com">
 			(Leave this as-is, it’s a trap!)
 		</p>
+		<input id="nnf_spamtoken-field" name="nnf_spam_token" type="hidden" value="">
 		<p id="nnf_error-none" class="ok">
 			<!-- this is shown by default as long as new users aren't disabled and the user isn't signed in -->
 			There is no need to “register”, just enter the same name + password of your choice every time.

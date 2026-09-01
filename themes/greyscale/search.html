@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" class="search"><head>
+	<meta charset="utf-8">
+	<!-- NoNonsense Forum v26 © Copyright (CC-BY) Kroc Camen 2010-2015
+	     licensed under Creative Commons Attribution 3.0 <creativecommons.org/licenses/by/3.0/deed.en_GB>
+	     you may do whatever you want to this code as long as you give credit to Kroc Camen, <camendesign.com> -->
+	<title>Search</title>
+	<!-- get rid of IE site compatibility button -->
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<link rel="stylesheet" href="/themes/greyscale/theme.css">
+	<link rel="stylesheet" href="/themes/greyscale/custom.css">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="robots" content="noindex, nofollow, noarchive">
+	<!-- standard fav-icons / mobile tiles -->
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+	<!-- Microsoft’s insane IE9+ pinned site syntax: <msdn.microsoft.com/library/gg131029> -->
+	<meta name="application-name" content="NoNonsense Forum">
+	<meta name="msapplication-starturl" content="http://forum.camendesign.com/">
+	<meta name="msapplication-window" content="width=1024;height=600">
+	<meta name="msapplication-navbutton-color" content="#222">
+	<!-- Windows 8 Tile icon / colour -->
+	<meta name="msapplication-TileImage" content="/metro-tile.png">
+	<meta name="msapplication-TileColor" content="#222">
+</head><body>
+<!-- =================================================================================================================== -->
+<header id="mast">
+	<h1><a href="/">
+		<img id="nnf_logo" src="/themes/greyscale/img/logo.png" width="32" height="32" alt=""><!--
+		--><span class="nnf_forum-name">NoNonsense Forum</span>
+	</a></h1>
+
+	<form id="search" method="get" action="search.php"><!--
+		--><input id="query" type="search" name="q" maxlength="100" placeholder="Search…" value=""><!--
+		--><input id="go" type="image" src="/themes/greyscale/img/go.png" width="20" height="20" alt="Search"><!--
+	--></form>
+
+	<nav>
+		<form id="nnf_lang" method="post">
+			<img src="/themes/greyscale/img/lang.png" width="20" height="20" alt="Language:" title="Language:">
+			<select name="lang" id="lang">
+				<option class="nnf_lang" value="" selected>English</option>
+			</select>
+			<input type="image" src="/themes/greyscale/img/go.png" width="20" height="20" alt="Set language">
+		</form>
+		<ol id="index">
+			<li><a href="/">Index</a></li>
+		</ol>
+	</nav>
+</header>
+<!-- =================================================================================================================== -->
+<section id="nnf_search">
+	<h1>Search</h1>
+
+	<p id="nnf_search-disabled" class="error">
+		<!-- shown if `FORUM_SEARCH` is switched off in 'config.php' -->
+		Search is not available on this forum.
+	</p>
+	<p id="nnf_search-noquery" class="ok">
+		<!-- shown when the page is visited without a search term yet -->
+		Enter a search term above to search this forum's threads.
+	</p>
+	<p id="nnf_search-noresults" class="error">
+		<!-- shown when a search term was given but nothing matched -->
+		No posts matched your search.
+	</p>
+
+	<ol id="nnf_search-results" class="ui">
+		<li class="nnf_result">
+			<a class="nnf_result-name" href="/thread#postid">The quick brown fox jumps over the lazy dog</a>
+			<b class="nnf_result-author nnf_mod">author</b>
+			<time class="nnf_result-time" datetime="2012-01-01T00:00:00+00:00">01 Jan ’12 · 00:00</time>
+			<p class="nnf_result-snippet">…an excerpt of the matching post is shown here…</p>
+		</li>
+	</ol>
+
+	<nav id="nnf_search-pages">
+		<a id="nnf_search-prev" href="search.php?q=&amp;page=1">« Newer</a>
+		<a id="nnf_search-next" href="search.php?q=&amp;page=2">Older »</a>
+	</nav>
+</section>
+<!-- =================================================================================================================== -->
+<footer><p>
+	Powered by <a href="http://camendesign.com/nononsense_forum">NoNonsense Forum</a><br>
+	<a href="/privacy.php">privacy policy</a>
+</p><p id="signin" class="nnf_signed-in">
+	Signed in as<br><b class="nnf_signed-in-name">Kroc</b>
+</p><form id="signin" class="nnf_signed-out" method="post">
+	<input type="submit" name="signin" value="Sign In">
+</form></footer>
+
+<script defer><!--
+//in iOS tapping a label doesn't click the related input element, we'll add this back in using JavaScript
+if (document.getElementsByTagName !== undefined) {
+	var labels = document.getElementsByTagName ("label");
+	//for reasons completely unknown, one only has to reset the onclick event, not actually make it do anything!!
+	for (i=0; i<labels.length; i++) if (labels[i].getAttribute ("for")) labels[i].onclick = function (){}
+}
+//when the language selector is changed, submit immediately
+document.getElementById ("lang").onchange = function (){ document.getElementById ("nnf_lang").submit (); };
+--></script>
+
+</body></html>

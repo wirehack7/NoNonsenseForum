@@ -195,11 +195,15 @@ ol.ui li time                   {float: right; width: 9.1em;                    
                                  font-weight: normal; text-align: right; color: #888;}
 ol.ui li a:hover time           {text-decoration: underline;}
 
+/* search results (an excerpt paragraph under the title/author/time of a normal 'ol.ui li' item) */
+.nnf_result-snippet             {clear: both; margin: 4px 0 0; padding: 0; font-size: smaller; color: #666;}
+
 /* ---------------------------------------------------------------------------------------------------------------------- */
 
 /* titles */
 #nnf_folders h1                 {background-image: url("img/folders.png"); background-size: 32px 32px;}
-#nnf_threads h1, #nnf_post h1   {background-image: url("img/threads.png"); background-size: 32px 32px;}
+#nnf_threads h1, #nnf_post h1,
+ #nnf_search h1                 {background-image: url("img/threads.png"); background-size: 32px 32px;}
 
 /* the last post name / date for sub-forums */
 #nnf_folders ol.ui li           {position: relative; border-bottom: 1px solid #444;}
@@ -547,7 +551,8 @@ section>h1 + nav                {background: none; float: right; margin-top: -50
 #nnf_add, #nnf_reply            {background-image: url("img/add_2x.png");}
 #nnf_rss                        {background-image: url("img/rss_2x.png");}
 #nnf_folders h1                 {background-image: url("img/folders_2x.png");}
-#nnf_threads h1, #nnf_post h1   {background-image: url("img/threads_2x.png");}
+#nnf_threads h1, #nnf_post h1,
+ #nnf_search h1                 {background-image: url("img/threads_2x.png");}
 #nnf_replies h1                 {background-image: url("img/replies_2x.png");}
 a.delete                        {background-image: url("img/delete_2x.png");}
 a.append                        {background-image: url("img/append_2x.png");}

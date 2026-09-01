@@ -40,6 +40,10 @@ $LANG['']['title_append']       = 'Append to %1$s';
 //"%1$s" - the post title (will come from `THEME_RE` for replies)
 $LANG['']['title_delete']       = 'Delete %1$s?';
 
+//the title for the search results page
+//"%1$s" - the search query (blank if none was given yet)
+$LANG['']['title_search']       = 'Search: %1$s';
+
 //reply number shown in threads as a permalink
 //"%1$u" - the number of the reply
 $LANG['']['replynum']           = '#%1$u.';
@@ -81,13 +85,9 @@ function theme_custom ($template) {
                 '//meta[@name="msapplication-navbutton-color"]/@content, //meta[@name="msapplication-TileColor"]/@content'
                                                                      => METRO_COLOUR, 
                 //set the site logo
-                'img#nnf_logo@src'                                   => FORUM_PATH.'themes/'.FORUM_THEME.'/img/'.THEME_LOGO,
-                
-                //set the forum URL for Google search-by-site
-                '//input[@name="as_sitesearch"]/@value'              => $_SERVER['HTTP_HOST'],
-                //if you're using a Google search, change it to HTTPS if enforced
-                '//form[@action="http://google.com/search"]/@action' => FORUM_HTTPS ? 'https://encrypted.google.com/search'
-                                                                                    : 'http://google.com/search'
+                'img#nnf_logo@src'                                   => FORUM_PATH.'themes/'.FORUM_THEME.'/img/'.THEME_LOGO
+                //the search box's "action" (and, if disabled, its removal) is set centrally, in `prepareTemplate ()`
+                //('lib/functions.php'), since every page carries the same search box
         ));
 }
 

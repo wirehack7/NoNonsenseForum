@@ -148,6 +148,36 @@ You will automatically be provided with instructions on how to do this
 when NNF runs without HTAccess and the "users" folder is in its default,
 insecure location.
 
+[1.6]   Running as a Tor onion service (".onion"):
+------------------------------------------------------------------------
+NNF has no database and builds all of its links relative to whatever
+`Host` header a request arrives with, so no code changes are needed to
+serve it as a Tor hidden service -- point a `HiddenServiceDir` /
+`HiddenServicePort` in "torrc" at the same web server already running
+NNF (typically listening only on 127.0.0.1) and the site will work at
+its ".onion" address exactly as it does on the clearnet.
+
+A few things worth checking for a Tor-only, or Tor-and-clearnet, install:
+
+*       Leave `FORUM_HTTPS` set to "false" in 'config.php'. Onion
+        addresses are already end-to-end encrypted and authenticated by
+        Tor itself and are normally served plain-HTTP from localhost;
+        forcing HTTPS / HSTS would just break access, not add protection.
+
+*       The built-in search ('search.php') is entirely self-hosted and
+        never contacts a third party, so it works identically on a
+        Tor-only install -- there's nothing to disable or reconfigure.
+
+*       NNF sends `Referrer-Policy: no-referrer` on every response, so
+        following a link out of the forum (e.g. one posted in a thread)
+        never leaks its address -- including a ".onion" address -- to
+        the site being visited.
+
+*       NNF doesn't read or store visitors' IP addresses anywhere, which
+        works in your favour here: there's nothing onion-specific to
+        strip out, and nothing that would either misidentify every
+        visitor as the same Tor exit node or (worse) end up logged.
+
 
 [2]     Customising:
 ========================================================================

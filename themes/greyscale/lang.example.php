@@ -82,7 +82,7 @@ $LANG['en']['strings']          = array (
 /* site header
    ---------------------------------------------------------------------------------------------------------------------- */
 //search box
- '#query@placeholder'                   => 'Google Search…'                     //default text shown in search box
+ '#query@placeholder'                   => 'Search…'                            //default text shown in search box
 ,'#go@alt'                              => 'Search'                             //search submit button
 
 //language selector
@@ -488,8 +488,8 @@ HTML
                 collected by any part of NoNonsense Forum itself; again, contact the website owner with any questions
         </p></li>
         <li><p>
-                The search feature is controlled by a third party (usually <a href="http://google.com">Google</a>),
-                and will certainly collect information. Please check their website for their privacy policy
+                The search feature is entirely self-hosted: your search terms are never sent to, or seen by, anyone
+                other than this site, and only ever search this site's own public posts
         </p></li>
 </ul>
 
