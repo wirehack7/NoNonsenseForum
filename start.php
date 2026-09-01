@@ -36,7 +36,9 @@
         AUTH            b       if the username / password are correct
         AUTH_HTTP       b       if the authentication was via HTTP_AUTH *and* was correct
                                 (will be false if the username / password were wrong, even if HTTP_AUTH was used)
-        
+        ANON            b       if this is a valid password-less post (`FORUM_ANON` on, name not yet claimed)
+        NAME_CLAIMED    b       if the given name already has a password set
+
         FORUM_LOCK              the contents of 'locked.txt' which sets restrictions on the forum / sub-forums
                                 see the "Forum locking" section in README.md
         $MODS                   array of the names of moderators for the whole forum, and the current sub-forum
@@ -195,40 +197,50 @@ if ((   //if HTTP authentication is used, we don’t need to validate the form f
         @$_SERVER['PHP_AUTH_USER'] && @$_SERVER['PHP_AUTH_PW']
 ) || (  //if an input form was submitted:
         FORM_SUBMIT &&
-        //are the name and password non-blank?
-        NAME && PASS &&
+        //is the name non-blank? (the password may be blank -- see `FORUM_ANON` below)
+        NAME &&
         //the email check is a fake hidden field in the form to try and fool spam bots
         isset ($_POST['email']) && @$_POST['email'] == 'example@abc.com' &&
         //a signed, timed token (see 'spamTokenValid' in 'lib/functions.php') proves the form was freshly served by
         //us, not forged by a bot that has simply read NNF's public source code to learn the honeypot's expected value
         spamTokenValid (@$_POST['nnf_spam_token'])
 )) {
-        //users are stored as text files based on the hash of the given name
+        //users are stored as text files based on the hash of the given name (see `userVerify` in 'lib/functions.php')
         $name = hash ('sha512', strtolower (NAME));
         $user = FORUM_DATA.DIRECTORY_SEPARATOR.FORUM_USERS.DIRECTORY_SEPARATOR."$name.txt";
-        
-        //create the user, if new:
-        //- if registrations are allowed (`FORUM_NEWBIES` is true)
-        //- you can’t create new users with the HTTP_AUTH sign in
-        if (FORUM_NEWBIES && !isset ($_SERVER['PHP_AUTH_USER']) && !file_exists ($user))
-                file_put_contents ($user, hash ('sha512', $name.PASS)) or require FORUM_LIB.'error_permissions.php'
-        ;
-        
-        //does password match?
-        define ('AUTH', @file_get_contents ($user) == hash ('sha512', $name.PASS));
-        
+        //has this name already been registered (a password set for it)?
+        define ('NAME_CLAIMED', file_exists ($user));
+
+        if (PASS !== '') {
+                //a password was given: create the user if new (registrations on, not via HTTP_AUTH sign-in),
+                //otherwise check the password against the stored hash
+                if (!NAME_CLAIMED && FORUM_NEWBIES && !isset ($_SERVER['PHP_AUTH_USER'])) {
+                        userCreate ($user, PASS) or require FORUM_LIB.'error_permissions.php';
+                        define ('AUTH', true);
+                } else {
+                        define ('AUTH', userVerify ($user, PASS, $name.PASS) === true);
+                }
+                define ('ANON', false);
+        } else {
+                //no password: allowed only if `FORUM_ANON` is on and nobody has claimed this name
+                define ('AUTH', false);
+                define ('ANON', FORUM_ANON && !NAME_CLAIMED && !isset ($_SERVER['PHP_AUTH_USER']));
+        }
+
         //if signed in with HTTP_AUTH, confirm that it’s okay to use
         //(e.g. the user could still have given the wrong password with HTTP_AUTH)
         define ('AUTH_HTTP', @$_SERVER['PHP_AUTH_USER'] ? AUTH : false);
-        
+
         //if the user clicked the sign-in button to authenticate, do a 303 redirect to the same URL to 'eat' the
         //form-submission so that if they click the back-button, they don't get prompted to "resubmit the form data"
         if (@$_POST['signin'] && AUTH_HTTP) header (
                 'Location: '.FORUM_URL.$_SERVER['REQUEST_URI'], true, 301
         );
 } else {
-        define ('AUTH',      false);
-        define ('AUTH_HTTP', false);
+        define ('AUTH',         false);
+        define ('AUTH_HTTP',    false);
+        define ('ANON',         false);
+        define ('NAME_CLAIMED', false);
 }
 
 /* access rights
@@ -283,10 +295,11 @@ foreach (explode (' ', THEME_LANGS) as $lang) @include THEME_ROOT."lang.$lang.ph
 //(note that the actual translation of the HTML is done in `prepareTemplate` in 'lib/functions.php')
 define ('LANG',
         //if the language selector has been used to choose a language:
-        isset ($_POST['lang']) && setcookie (
+        isset ($_POST['lang']) && setcookie ("lang", $_POST['lang'], array (
         //- set the language cookie for 1 year
-        "lang", $_POST['lang'], time ()+60*60*24*365, FORUM_PATH, $_SERVER['HTTP_HOST'], FORUM_HTTPS
-)       ? $_POST['lang']
+        'expires'  => time ()+60*60*24*365, 'path' => FORUM_PATH, 'domain' => $_SERVER['HTTP_HOST'],
+        'secure'   => FORUM_HTTPS, 'httponly' => true, 'samesite' => 'Lax'
+))      ? $_POST['lang']
         //otherwise, does a cookie already exist to set the language?
         : (     //validate that the language in the cookie actually exists!
                 array_key_exists (@$_COOKIE['lang'], $LANG)

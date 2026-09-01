@@ -379,7 +379,7 @@ if (isset ($_GET['delete'])) {
    new reply submitted
    ====================================================================================================================== */
 //was the submit button clicked? (and is the info valid?)
-if (CAN_REPLY && AUTH && TEXT) {
+if (CAN_REPLY && (AUTH || ANON) && TEXT) {
         //get a read/write lock on the file so that between now and saving, no other posts could slip in
         //normally we could use a write-only lock 'c', but on Windows you can't read the file when write-locked!
         $f = fopen ("$FILE.rss", 'r+'); flock ($f, LOCK_EX);
@@ -638,15 +638,19 @@ if (CAN_REPLY) $template->set (array (
 )->remove (FORUM_NEWBIES
         ? '#nnf_error-newbies'  //yes: remove the warning message
         : '#nnf_error-none'     //no:  remove the default message
-        
+
+//if the forum allows password-less posting, the password field isn't required
+)->remove (array ('#nnf_pass-field@required' => FORUM_ANON)
+
 //handle error messages
 )->remove (array (
         //if there's an error of any sort, remove the default messages
         '#nnf_error-none, #nnf_error-none-http, #nnf_error-newbies' => FORM_SUBMIT,
-        //if the username & password are correct, remove the error message
-        '#nnf_error-auth'  => !FORM_SUBMIT || !TEXT || !NAME || !PASS || AUTH,
-        //if the password is valid, remove the error message
-        '#nnf_error-pass'  => !FORM_SUBMIT || !TEXT || !NAME || PASS,
+        //"that name is taken / wrong password": only when the name is claimed (or a password was tried), it didn't
+        //check out, and we're not letting this through as an anonymous reply
+        '#nnf_error-auth'  => !FORM_SUBMIT || !TEXT || !NAME || AUTH || ANON || (!PASS && !NAME_CLAIMED),
+        //"enter a password": only when passwords are mandatory (anon posting off)
+        '#nnf_error-pass'  => !FORM_SUBMIT || !TEXT || !NAME || PASS || FORUM_ANON,
         //if the name is valid, remove the error message
         '#nnf_error-name'  => !FORM_SUBMIT || !TEXT || NAME,
         //if the message text is valid, remove the error message

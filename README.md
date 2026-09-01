@@ -8,7 +8,7 @@ A simple forum that focuses on discussion and simplicity.
 ## How NoNonsense differs from other forums
 
 - **No database.** Threads are just RSS feeds. When a reply is added, a new item is added to the feed.
-- **No hoops to jump through.** No registration, no e-mail confirmation, no CAPTCHA. Type your message, give a name and password you want to use, and your post is made. Use the same name / password pair in the future to keep the same name — that's it.
+- **No hoops to jump through.** No registration, no e-mail confirmation, no CAPTCHA. Type your message, give a name and password you want to use, and your post is made. Use the same name / password pair in the future to keep the same name — that's it. (Set `FORUM_ANON` in `config.php` to also allow posting with no password, under any name nobody has claimed yet.)
 - **No clutter.** No user profiles, no "status updates", no signatures, no user ranks. Just discussion.
 
 ## Quick start (Docker)
@@ -53,7 +53,7 @@ Provide a username for the admin and any moderators:
 - Mods in the **root** `mods.txt` can moderate everywhere, including locked sub-forums.
 - Mods in a **sub-forum** `mods.txt` (e.g. `news/mods.txt`) can only moderate that sub-forum.
 
-> **Claim the names immediately.** Make each admin/mod account real by signing in and posting once — otherwise anybody could take the name and take control. To "register" a name you just sign in with it and a password of your choice the first time; the password hash is then stored in `users/`.
+> **Claim the names immediately.** Make each admin/mod account real by signing in and posting once — otherwise anybody could take the name and take control. To "register" a name you just sign in with it and a password of your choice the first time; the password hash is then stored in `users/` (bcrypt by default; set `FORUM_PASS_ALGO` to `PASSWORD_ARGON2ID` for Argon2 — existing hashes upgrade automatically on next sign-in).
 
 ### Sign-in
 

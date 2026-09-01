@@ -14,6 +14,8 @@ define ('FORUM_LIB',   FORUM_ROOT.DIRECTORY_SEPARATOR.'lib'.DIRECTORY_SEPARATOR)
 //never writes anything into the repo. `FORUM_USERS` stays a plain folder name, relative to `FORUM_DATA`, as always.
 define ('FORUM_DATA',  sys_get_temp_dir ().DIRECTORY_SEPARATOR.'nnf_test_'.getmypid ());
 define ('FORUM_USERS', 'users');
+//password-hash algorithm for the "users" folder (see 'config.default.php'); the portable default is fine for tests
+define ('FORUM_PASS_ALGO', PASSWORD_DEFAULT);
 @mkdir (FORUM_DATA.DIRECTORY_SEPARATOR.FORUM_USERS, 0777, true);
 //delete the whole temp data dir once the test process ends
 register_shutdown_function (function () {
