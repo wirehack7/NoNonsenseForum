@@ -36,6 +36,12 @@ v27     (in development)
         NOTE: existing Docker deployments must migrate the old named volume -- see INSTALL.txt section [1.7].
         NOTE: custom themes -- 'nnf.conf' exposes the theme folder to the browser at "/themes"; a per-instance
         theme override now means rebuilding the image or adding your own mount
+*       Optional access gate: put one or more passwords in "users/access.txt" (one per line) and the whole forum
+        sits behind them -- a visitor enters ANY one of them (not all, not in sequence) and a 30-day cookie keeps
+        them in. Separate from user sign-in; it's a shared "door" password you can hand out per person/group and
+        revoke individually (delete a line -> everyone who used that password is locked out again, others
+        unaffected). Lines may be plain text or a `password_hash ()` string. See INSTALL.txt section [2.6].
+        (Does not cover direct requests for the static ".rss"/".xml" feeds -- those never run PHP.)
 *       Added 'TOR.md': a step-by-step guide to running NNF as a hidden-only Tor onion service via the Docker image
         (Tor on the host, the container's web port published to loopback only), covering anonymous provisioning,
         host hardening, admin-over-onion, keeping the clearnet IP from revealing that a forum runs there, and a

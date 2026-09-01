@@ -298,7 +298,7 @@ sudo ./rotate-onion.sh ./vanity-dir    # install a key made offline with mkp224o
 It stops the forum, backs up the old key (as `…​.bak` — shred it once sure),
 installs/generates the new key, rewrites every occurrence of the old address in
 `./data`, drops the generated indexes, and restarts. It then prints the manual
-follow‑ups: update the §5.2 Host filter and rebuild the image, recreate the
+follow‑ups: update the §5.3 Host filter and rebuild the image, recreate the
 §3.4 client‑auth files (tied to the old key), post+delete a test thread to
 rebuild `index.xml`/`sitemap.xml`, and announce the new address through a
 channel your users already trust (the old one just stops resolving — NNF can't
@@ -361,7 +361,17 @@ too (§3.4, same idea under `/var/lib/tor/ssh/`).
 @define('FORUM_TIMEZONE','UTC');   // never your real timezone
 ```
 
-### 5.2 Reject non‑`.onion` requests (Host‑header trap)
+### 5.2 (Optional) a shared password in front of the forum
+
+Independent of Tor client authorisation (§3.4), NNF can gate the whole site
+behind one or more shared passwords: put them, one per line, in
+`./data/users/access.txt`. Any one lets a visitor in; delete a line to revoke
+that one. See `INSTALL.txt` §2.6. Client authorisation (§3.4) is stronger and
+also covers the `.rss` feeds — use that if the group is small and fixed; use
+`access.txt` if you need to hand a password to people without provisioning a
+Tor client key each time.
+
+### 5.3 Reject non‑`.onion` requests (Host‑header trap)
 
 NNF builds every link — **including the ones written permanently into the
 `.rss` files** — from `$_SERVER['HTTP_HOST']`. If anything ever reaches NNF with
@@ -381,7 +391,7 @@ container, but add a belt‑and‑suspenders rule. Append to the repo's
 Then check that `./data/index.xml` and every thread `.rss` contains only the
 `.onion` URL.
 
-### 5.3 Scrub identifying strings from the theme
+### 5.4 Scrub identifying strings from the theme
 
 The stock `greyscale` theme loads **no** external fonts, scripts, images or
 trackers (verified) — nothing phones out from a rendered page. But it embeds a
@@ -396,7 +406,7 @@ few strings identifying the *software* and its author's site. In
 
 Any `themes/greyscale/custom.css` you add: keep every `url(...)` local.
 
-### 5.4 PHP
+### 5.5 PHP
 
 The image already sets sane defaults, but confirm in a
 `docker compose ... exec forum php -i`:

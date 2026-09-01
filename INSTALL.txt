@@ -19,6 +19,7 @@ Contents:
 [2.3]   Favicon, touch-icon and Metro tile
 [2.4]   Adding a forum introduction (about.html)
 [2.5]   Custom CSS
+[2.6]   Password-protecting the whole forum (access.txt)
 [3]     Translations
 
 
@@ -324,6 +325,41 @@ about using and providing theme translations.
 ------------------------------------------------------------------------
 Within the theme folder (that is where 'theme.css' is for the chosen
 theme) create a 'custom.css' file and it will be automatically included.
+
+[2.6]   Password-protecting the whole forum ('access.txt'):
+------------------------------------------------------------------------
+To put the entire forum behind a shared password, create an 'access.txt'
+file inside the "users" folder (the same private folder that holds the
+password hashes -- NOT the web-root, so the file itself is never served)
+and put one password per line:
+
+    correct-horse-battery-staple
+    # lines starting with '#' and blank lines are ignored
+    another-handout-password
+
+Any ONE of the listed passwords lets a visitor in -- they are not
+entered one after another. A visitor enters a password once and a cookie
+keeps them in for 30 days.
+
+This is a "door" in front of the site, separate from user sign-in. Hand
+different passwords to different people/groups; to revoke one, delete its
+line -- everyone who used that specific password is locked out again on
+their next request (other passwords and their users are unaffected).
+
+Lines may be plain text, or a PHP `password_hash ()` string (recommended
+if you're worried about the file's contents leaking):
+
+    php -r 'echo password_hash("the-password", PASSWORD_DEFAULT), "\n";'
+
+Delete 'access.txt' (or empty it) to switch the gate off. It has no
+effect on direct requests for the ".rss" / ".xml" feed files, which the
+web server delivers without running any PHP -- if you need those covered
+too, add HTTP Basic auth for those file types at the web-server level, or
+(for a Tor onion) use onion client authorisation (see 'TOR.md').
+
+NOTE: the gate signs its cookie with the same per-install secret as the
+anti-spam token ("users/.spam_secret"); deleting that file logs everyone
+out of the gate (and is otherwise harmless).
 
 
 [3]     Translations:

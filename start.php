@@ -140,6 +140,10 @@ define ('HTACCESS', (bool) @$_SERVER['HTTP_HTACCESS']);
 //if '.htaccess' is missing or disabled, and the 'users' folder is in an insecure location, warn the site admin to move it
 if (!HTACCESS && FORUM_USERS == 'users') require FORUM_LIB.'error_htaccess.php';
 
+//optional access gate: if 'access.txt' lists door passwords, block everything until the visitor has entered one
+//(see `requireAccess ()` in 'lib/functions.php'). does nothing if 'access.txt' is absent / empty.
+requireAccess ();
+
 /* common input
    ---------------------------------------------------------------------------------------------------------------------- */
 //most pages allow for a page number; note that this is merely the user-input, it is not necessarily a valid page number!
