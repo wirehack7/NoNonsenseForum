@@ -38,7 +38,7 @@
                                 (will be false if the username / password were wrong, even if HTTP_AUTH was used)
         
         FORUM_LOCK              the contents of 'locked.txt' which sets restrictions on the forum / sub-forums
-                                see section 5 in the README file
+                                see the "Forum locking" section in README.md
         $MODS                   array of the names of moderators for the whole forum, and the current sub-forum
         $MEMBERS                array of the names of members for the current sub-forum
         IS_ADMIN        b       if the current viewer is the site admin (first name in 'mods.txt')
@@ -139,6 +139,10 @@ define ('FORUM_URL', 'http'.                                    //base URL to pr
 define ('HTACCESS', (bool) @$_SERVER['HTTP_HTACCESS']);
 //if '.htaccess' is missing or disabled, and the 'users' folder is in an insecure location, warn the site admin to move it
 if (!HTACCESS && FORUM_USERS == 'users') require FORUM_LIB.'error_htaccess.php';
+
+//optional access gate: if 'access.txt' lists door passwords, block everything until the visitor has entered one
+//(see `requireAccess ()` in 'lib/functions.php'). does nothing if 'access.txt' is absent / empty.
+requireAccess ();
 
 /* common input
    ---------------------------------------------------------------------------------------------------------------------- */

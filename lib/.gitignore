@@ -9,6 +9,7 @@
 # code
 !functions.php
 !utf8safe.php
+!gate.php
 
 # error messages
 !error_apachever.php

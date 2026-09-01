@@ -29,7 +29,7 @@
 !HISTORY.txt
 !INSTALL.txt
 !LICENCE.txt
-!README.txt
+!README.md
 !TOR.md
 
 # dev tooling / CI (not part of the running forum itself)
@@ -47,5 +47,7 @@
 !docker-compose.yml
 !docker-compose.tor.yml
 !docker-entrypoint.sh
-!deploy-onion.sh
-!rotate-onion.sh
+
+# operator scripts
+!tools/
+!tools/**

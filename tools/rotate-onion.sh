@@ -4,27 +4,27 @@
 # and stored permalink -- so changing the address means a new Tor key AND a
 # rewrite of everything already in the data directory.
 #
-# Run on the HOST, as root, from the directory holding "docker-compose.tor.yml":
+# Run on the HOST, as root, from anywhere inside the checkout:
 #
-#   sudo ./rotate-onion.sh                 # generate a fresh random address
-#   sudo ./rotate-onion.sh ./vanity-dir    # install a key made offline with mkp224o
-#   sudo ./rotate-onion.sh -y [dir]        # skip the confirmation prompt
+#   sudo tools/rotate-onion.sh                 # generate a fresh random address
+#   sudo tools/rotate-onion.sh ./vanity-dir    # install a key made offline with mkp224o
+#   sudo tools/rotate-onion.sh -y [dir]        # skip the confirmation prompt
 #
 # Override any of these with the environment:
 #   TOR_HS_DIR   (default /var/lib/tor/nnf)
 #   TOR_SERVICE  (default tor@default)
 #   TOR_USER     (default debian-tor)
-#   DATA_DIR     (default <script dir>/data)
-#   COMPOSE_FILE (default <script dir>/docker-compose.tor.yml)
+#   DATA_DIR     (default <repo>/data)
+#   COMPOSE_FILE (default <repo>/docker-compose.tor.yml)
 set -euo pipefail
 
 TOR_HS_DIR=${TOR_HS_DIR:-/var/lib/tor/nnf}
 TOR_SERVICE=${TOR_SERVICE:-tor@default}
 TOR_USER=${TOR_USER:-debian-tor}
 
-SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
-DATA_DIR=${DATA_DIR:-$SCRIPT_DIR/data}
-COMPOSE_FILE=${COMPOSE_FILE:-$SCRIPT_DIR/docker-compose.tor.yml}
+REPO_DIR=$(cd "$(dirname "$0")/.." && pwd)
+DATA_DIR=${DATA_DIR:-$REPO_DIR/data}
+COMPOSE_FILE=${COMPOSE_FILE:-$REPO_DIR/docker-compose.tor.yml}
 
 ASSUME_YES=0
 [ "${1:-}" = "-y" ] && { ASSUME_YES=1; shift; }

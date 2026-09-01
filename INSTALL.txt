@@ -19,6 +19,7 @@ Contents:
 [2.3]   Favicon, touch-icon and Metro tile
 [2.4]   Adding a forum introduction (about.html)
 [2.5]   Custom CSS
+[2.6]   Password-protecting the whole forum (access.txt)
 [3]     Translations
 
 
@@ -201,7 +202,7 @@ docker compose up -d
         The forum will then be available at <http://localhost:8080/>
 
 *       NNF has no database -- threads, sub-forums, "config.php" and the
-        "users" folder are all just files (see README.txt). Normally NNF
+        "users" folder are all just files (see README.md). Normally NNF
         writes them straight into its own code directory; the Docker
         image instead keeps the two apart. The code is baked into the
         image at "/var/www/nnf" (outside the web-root) and the web-root
@@ -324,6 +325,49 @@ about using and providing theme translations.
 ------------------------------------------------------------------------
 Within the theme folder (that is where 'theme.css' is for the chosen
 theme) create a 'custom.css' file and it will be automatically included.
+
+[2.6]   Password-protecting the whole forum ('access.txt'):
+------------------------------------------------------------------------
+To put the entire forum behind a shared password, create an 'access.txt'
+file inside the "users" folder (the same private folder that holds the
+password hashes -- NOT the web-root, so the file itself is never served)
+with one password per line. Each line may carry a trailing " # label" so
+you can tell entries apart later:
+
+    $2y$12$Rk9....hash....  # Alice, in person
+    hunter2                 # the meetup, temp
+    # blank lines and lines starting with '#' are ignored
+
+Any ONE of the listed passwords lets a visitor in -- they are not
+entered one after another. A visitor enters a password once and a cookie
+keeps them in for 30 days.
+
+This is a "door" in front of the site, separate from user sign-in. Hand
+different passwords to different people/groups; to revoke one, delete its
+line -- everyone who used that specific password is locked out again on
+their next request (other passwords and their users are unaffected).
+
+Lines may be plain text, or a PHP `password_hash ()` string (recommended
+-- if the file ever leaks, the passwords don't). A plain-text password
+cannot contain the two characters " #" (space then hash); use a hash if
+you need to.
+
+The 'tools/manage-access.sh' script in the repo does all of this for you:
+
+    tools/manage-access.sh add "Alice"      generate a password, hash it, add it
+    tools/manage-access.sh add "temp" pw    add a password you chose
+    tools/manage-access.sh list             show the labels (not the passwords)
+    tools/manage-access.sh remove 2         revoke entry #2
+
+Delete 'access.txt' (or empty it) to switch the gate off. It has no
+effect on direct requests for the ".rss" / ".xml" feed files, which the
+web server delivers without running any PHP -- if you need those covered
+too, add HTTP Basic auth for those file types at the web-server level, or
+(for a Tor onion) use onion client authorisation (see 'TOR.md').
+
+NOTE: the gate signs its cookie with the same per-install secret as the
+anti-spam token ("users/.spam_secret"); deleting that file logs everyone
+out of the gate (and is otherwise harmless).
 
 
 [3]     Translations:
