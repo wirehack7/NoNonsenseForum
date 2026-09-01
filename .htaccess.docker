@@ -131,6 +131,10 @@ FileETag None
 	# don’t serve NNF's plain-text config / state files (read server-side only)
 	RewriteRule (^|/)(mods|members|locked|sticky|access)\.txt$ - [NC,F]
 
+	# don’t serve the operator scripts (they aren't in the image, but be safe)
+	RewriteRule (^|/)tools/ - [NC,F]
+	RewriteRule \.sh$ - [NC,F]
+
 	# don’t allow forum access to users / themes / lib folder
 	RewriteCond %{QUERY_STRING} path=(?:themes|users|lib) [NC]
 	RewriteRule ^ - [F]

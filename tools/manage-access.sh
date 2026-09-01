@@ -3,24 +3,24 @@
 # Any ONE listed password lets a visitor in; each entry carries a "# label" so you can
 # tell which is which when revoking.
 #
-#   ./manage-access.sh add "Alice"              generate a password for Alice, hash it, add it
-#   ./manage-access.sh add "meetup" hunter2     add a password you chose
-#   ./manage-access.sh add --plain "Bob"        store it in plain text (not hashed)
-#   ./manage-access.sh list                     show the labels (never prints the passwords)
-#   ./manage-access.sh remove 2                 revoke entry #2 from the list
+#   tools/manage-access.sh add "Alice"           generate a password for Alice, hash it, add it
+#   tools/manage-access.sh add "meetup" hunter2  add a password you chose
+#   tools/manage-access.sh add --plain "Bob"     store it in plain text (not hashed)
+#   tools/manage-access.sh list                  show the labels (never prints the passwords)
+#   tools/manage-access.sh remove 2              revoke entry #2 from the list
 #
 # Config via environment:
-#   DATA_DIR      (default <script dir>/data)   -- NNF's data directory
-#   COMPOSE_FILE  (default <script dir>/docker-compose.tor.yml, else docker-compose.yml)
+#   DATA_DIR      (default <repo>/data)   -- NNF's data directory
+#   COMPOSE_FILE  (default <repo>/docker-compose.tor.yml, else docker-compose.yml)
 set -euo pipefail
 
-SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
-DATA_DIR=${DATA_DIR:-$SCRIPT_DIR/data}
+REPO_DIR=$(cd "$(dirname "$0")/.." && pwd)
+DATA_DIR=${DATA_DIR:-$REPO_DIR/data}
 ACCESS_FILE=$DATA_DIR/users/access.txt
 
 if [ -z "${COMPOSE_FILE:-}" ]; then
-	COMPOSE_FILE=$SCRIPT_DIR/docker-compose.tor.yml
-	[ -f "$COMPOSE_FILE" ] || COMPOSE_FILE=$SCRIPT_DIR/docker-compose.yml
+	COMPOSE_FILE=$REPO_DIR/docker-compose.tor.yml
+	[ -f "$COMPOSE_FILE" ] || COMPOSE_FILE=$REPO_DIR/docker-compose.yml
 fi
 
 die () { echo "error: $*" >&2; exit 1; }
@@ -119,7 +119,7 @@ remove)
 	;;
 
 *)
-	sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'
+	sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'
 	exit 1
 	;;
 esac

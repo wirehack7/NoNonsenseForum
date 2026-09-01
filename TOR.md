@@ -28,17 +28,20 @@ separate directories) already in this repo.
 
 ## Quick start
 
-The repo ships **`deploy-onion.sh`** — on a fresh Ubuntu 22.04 / 24.04 server,
-as root, it installs Docker + Tor, clones this repo, brings up the loopback‑only
-stack and creates the v3 onion services:
+The repo ships **`tools/deploy-onion.sh`** — on a fresh Ubuntu 22.04 / 24.04
+server, as root, it installs Docker + Tor, clones this repo, brings up the
+loopback‑only stack and creates the v3 onion services:
 
 ```sh
-curl -fsSLO https://raw.githubusercontent.com/wirehack7/NoNonsenseForum/refs/heads/master/deploy-onion.sh
+curl -fsSLO https://raw.githubusercontent.com/wirehack7/NoNonsenseForum/refs/heads/master/tools/deploy-onion.sh
 less deploy-onion.sh                # read it before you run it
 sudo bash deploy-onion.sh          # prints your .onion when done
 # once you have connected over the SSH onion it printed and confirmed it works:
 sudo HARDEN=1 bash deploy-onion.sh # applies the default-deny firewall
 ```
+
+Later, update the running forum with **`sudo tools/update-onion.sh`** (pulls the
+code, rebuilds the image, leaves `./data` and the onion key alone).
 
 That gets the service **running**. It does **not** make the operation
 *anonymous* — the server still has to be acquired, paid for, and administered
@@ -192,8 +195,8 @@ apt install -y tor deb.torproject.org-keyring
 
 ## 3. The deployment
 
-`deploy-onion.sh` (Quick start, above) does §3.1 and §3.2 for you. This section
-is what it does — and how to do it by hand.
+`tools/deploy-onion.sh` (Quick start, above) does §3.1 and §3.2 for you. This
+section is what it does — and how to do it by hand.
 
 Tor runs **on the host**, exactly like Docker does. NNF runs as the project's
 Docker container, publishing its web port to **loopback only**. The host's Tor
@@ -287,12 +290,12 @@ just starting over). NNF has **no** URL setting — it builds links from the
 `index.xml`, `sitemap.xml` and every stored permalink, so the old address is
 embedded throughout `./data`.
 
-The repo ships **`rotate-onion.sh`** to do it. Run it on the host, as root, from
-the checkout directory:
+The repo ships **`tools/rotate-onion.sh`** to do it. Run it on the host, as root,
+from inside the checkout:
 
 ```sh
-sudo ./rotate-onion.sh                 # fresh random address
-sudo ./rotate-onion.sh ./vanity-dir    # install a key made offline with mkp224o
+sudo tools/rotate-onion.sh                 # fresh random address
+sudo tools/rotate-onion.sh ./vanity-dir    # install a key made offline with mkp224o
 ```
 
 It stops the forum, backs up the old key (as `…​.bak` — shred it once sure),
@@ -365,7 +368,7 @@ too (§3.4, same idea under `/var/lib/tor/ssh/`).
 
 Independent of Tor client authorisation (§3.4), NNF can gate the whole site
 behind one or more shared passwords in `./data/users/access.txt` — any one lets
-a visitor in, delete a line to revoke it. Manage it with `./manage-access.sh`
+a visitor in, delete a line to revoke it. Manage it with `tools/manage-access.sh`
 (`add` / `list` / `remove`); see `INSTALL.txt` §2.6. Client authorisation (§3.4) is stronger and
 also covers the `.rss` feeds — use that if the group is small and fixed; use
 `access.txt` if you need to hand a password to people without provisioning a
@@ -493,9 +496,9 @@ address and fix everything it flags.
 * Don't post the `.onion` anywhere linked to you. Assume every place you post it
   is logged forever.
 * Strip EXIF and re‑encode any image before it goes near the server.
-* Patch promptly — `git pull` + `docker compose … up -d --build` and
-  `apt full-upgrade`, all over Tor. An exploited PHP/Apache bug bypasses
-  everything above.
+* Patch promptly — `sudo tools/update-onion.sh` for the forum and its image,
+  `apt full-upgrade` for the host, all over Tor. An exploited PHP/Apache bug
+  bypasses everything above.
 * `./data` is the entire forum (no database). Back it up encrypted, over Tor.
 * Rehearse abandonment: how you wipe or walk away from the box, and where the
   offline `/var/lib/tor/nnf` backup lives (reachable by you, not by a server seizure,

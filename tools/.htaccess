@@ -1,0 +1,9 @@
+# these are host-side operator scripts, never meant to be reachable over the web.
+# this file matters only if NNF is checked out into (or under) a web-root.
+<IfModule mod_authz_core.c>
+	Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+	Order allow,deny
+	Deny from all
+</IfModule>

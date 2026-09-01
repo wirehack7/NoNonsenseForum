@@ -41,11 +41,15 @@ v27     (in development)
         them in. Separate from user sign-in; it's a shared "door" password you can hand out per person/group and
         revoke individually (delete a line -> everyone who used that password is locked out again, others
         unaffected). Lines may be plain text or a `password_hash ()` string, and may carry a trailing " # label"
-        so you can tell entries apart. The 'manage-access.sh' script generates / lists / removes them. See
+        so you can tell entries apart. The 'tools/manage-access.sh' script generates / lists / removes them. See
         INSTALL.txt section [2.6]. (Does not cover direct requests for the static ".rss"/".xml" feeds -- those
         never run PHP.)
 *       ".htaccess" now blocks direct web access to "mods.txt" / "members.txt" / "locked.txt" / "sticky.txt" /
-        "access.txt" -- these are only ever read server-side. ("about.html" and "robots.txt" are still served.)
+        "access.txt", to "tools/" and to any ".sh" -- these are only ever used server-/host-side. ("about.html"
+        and "robots.txt" are still served.)
+*       Operator scripts collected into "tools/": "deploy-onion.sh" (fresh-server deploy), "update-onion.sh"
+        (pull + rebuild an already-deployed onion, leaving the data and key untouched), "rotate-onion.sh"
+        (change the .onion address), "manage-access.sh" (access-gate passwords). See TOR.md.
 *       Added 'TOR.md': a step-by-step guide to running NNF as a hidden-only Tor onion service via the Docker image
         (Tor on the host, the container's web port published to loopback only), covering anonymous provisioning,
         host hardening, admin-over-onion, keeping the clearnet IP from revealing that a forum runs there, and a

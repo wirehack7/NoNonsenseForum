@@ -4,7 +4,7 @@
 # brings up the loopback-only compose stack, and creates the v3 onion services.
 #
 # Run as root on the server:
-#   curl -fsSLO https://raw.githubusercontent.com/wirehack7/NoNonsenseForum/master/deploy-onion.sh
+#   curl -fsSLO https://raw.githubusercontent.com/wirehack7/NoNonsenseForum/master/tools/deploy-onion.sh
 #   sudo bash deploy-onion.sh
 #
 # This gets the service RUNNING. It does NOT, by default, apply the full
@@ -12,6 +12,8 @@
 # OpSec) -- read TOR.md and do that once you've confirmed the SSH onion works.
 # Set HARDEN=1 to also apply the firewall (this WILL drop a clear-net SSH
 # session -- only do it once you can reach the box over the SSH onion).
+#
+# To UPDATE an already-deployed forum later, use 'tools/update-onion.sh'.
 #
 # Config via environment:
 #   REPO_URL     (default https://github.com/wirehack7/NoNonsenseForum.git)

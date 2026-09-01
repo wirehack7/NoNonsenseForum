@@ -352,12 +352,12 @@ Lines may be plain text, or a PHP `password_hash ()` string (recommended
 cannot contain the two characters " #" (space then hash); use a hash if
 you need to.
 
-The 'manage-access.sh' script in the repo does all of this for you:
+The 'tools/manage-access.sh' script in the repo does all of this for you:
 
-    ./manage-access.sh add "Alice"      generate a password, hash it, add it
-    ./manage-access.sh add "temp" pw    add a password you chose
-    ./manage-access.sh list             show the labels (not the passwords)
-    ./manage-access.sh remove 2         revoke entry #2
+    tools/manage-access.sh add "Alice"      generate a password, hash it, add it
+    tools/manage-access.sh add "temp" pw    add a password you chose
+    tools/manage-access.sh list             show the labels (not the passwords)
+    tools/manage-access.sh remove 2         revoke entry #2
 
 Delete 'access.txt' (or empty it) to switch the gate off. It has no
 effect on direct requests for the ".rss" / ".xml" feed files, which the
