@@ -1,3 +1,28 @@
+v27     (in development)
+*       PHP8 compatibility: NNF would fatal-error on startup on any current PHP version. Fixed the removed
+        `get_magic_quotes_gpc` / `create_function` calls, a class-declaration order bug that PHP8 no longer tolerates,
+        and a `stripos ()` behaviour change that caused every request to silently `die ()` at the forum root. Also
+        cleaned up the resulting PHP8.1+ / 8.2+ deprecation notices (nullable-string params, `${var}` interpolation,
+        `"self"` callables, `base_convert` of a non-numeric string) so pages render without warnings again
+*       New second layer of anti-spam protection: forms now embed a signed, timed token (see `spamToken` /
+        `spamTokenValid` in 'lib/functions.php') alongside the existing honeypot field. A submission is only
+        accepted if it wasn't posted implausibly fast, and the token's signature (keyed by a secret generated once
+        per install, kept private in the "users" folder) proves the form was actually served by this install a
+        moment ago -- unlike the honeypot, this can't be defeated just by reading NNF's public source code.
+        No CAPTCHA, no JavaScript, no IP logging -- keeps to NNF's "no hoops to jump through" philosophy
+*       NNF can now be run as a Tor onion service (".onion") without any code changes -- see section [1.6] of
+        'INSTALL.txt'. Added a `Referrer-Policy: no-referrer` header (stops an outbound link leaking the forum's,
+        including a ".onion", address to the site being linked to) and an `X-Content-Type-Options: nosniff` header,
+        and removed a dead external script include (IE<9 "html5shim", whose host has been offline for years)
+*       Replaced the Google site-search box with a real, self-hosted search ('search.php', `searchThreads ()` in
+        'lib/functions.php'): searches every thread's title, message text and author across the whole forum
+        (including sub-forums), with no third party involved -- nothing about your search ever leaves the site,
+        which also means, unlike Google, it actually works for a forum only reachable as a Tor onion service.
+        `FORUM_SEARCH` (in 'config.php') switches the feature on/off; `FORUM_SEARCH_RESULTS` sets the page size
+        NOTE: 'theme.php' / the theme's HTML lost the "as_sitesearch" hidden field and the search box's "action" is
+        now set centrally in `prepareTemplate ()`; if you have a custom theme, update its search form accordingly
+        (the query field's `name` also changed, from "as_q" to "q")
+
 v26     22.FEB.15
 *       Fixed problems with transliteration when on PHP5.4 without all the necessary libs in place
 *       Stick and Unstick thread buttons when logged in as the Admin (the Admin is now the first person listed in mods.txt)

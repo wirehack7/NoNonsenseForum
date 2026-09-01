@@ -1,0 +1,41 @@
+parameters:
+    # NNF is a decade-old, deliberately dependency-free procedural codebase: request-time constants are defined by
+    # 'start.php' rather than declared anywhere PHPStan can see, and its custom XPath-shorthand / DOMTemplate API
+    # isn't type-hinted. A stricter level would mostly flag those existing, working patterns rather than real bugs,
+    # so this stays low and focused on genuine defects (undefined variables/functions, unreachable code, etc.)
+    level: 2
+
+    paths:
+        - index.php
+        - start.php
+        - thread.php
+        - markup.php
+        - privacy.php
+        - search.php
+        - lib/functions.php
+        - lib/utf8safe.php
+        - lib/domtemplate/domtemplate.php
+        - themes/greyscale/theme.php
+
+    # request-time constants that 'start.php' / 'config.default.php' `define ()` before any of the above run
+    bootstrapFiles:
+        - phpstan-bootstrap.php
+
+    excludePaths:
+        - lib/error_*.php # plain HTML/PHP error pages, not logic
+
+    ignoreErrors:
+        # every `require FORUM_LIB.'error_*.php'` / `include './config.php'` resolves to a real file at runtime, but
+        # PHPStan can't follow a path built from a constant it doesn't have a real filesystem to check against
+        - identifier: require.fileNotFound
+        - identifier: include.fileNotFound
+
+        # a handful of variables ($stickies, $sort, $url, $MODS, $LANG, $replace, $result …) are set in one
+        # conditional branch and read in another that PHP's actual control flow guarantees runs after it -- a
+        # long-standing, working pattern in this codebase's style, not something being fixed here
+        - identifier: variable.undefined
+
+        # `DOMTemplateNode::__toString ()` / `remove ()` read `$this->type`, a property only the concrete
+        # `DOMTemplate` subclass declares (never `DOMTemplateRepeater`, the class's only other subclass, which never
+        # calls those methods) -- correct at runtime, just not something a base-class-level check can see
+        - identifier: property.notFound

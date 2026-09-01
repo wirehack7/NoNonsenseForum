@@ -60,6 +60,7 @@
         THEME_TITLE_PAGENO      the `sprintf`-formatted optional page-number portion of the title, in the selected lang.
         THEME_TITLE_APPEND      the `sprintf`-formatted `<title>` string for the append page, in the selected language
         THEME_TITLE_DELETE      the `sprintf`-formatted `<title>` string for the delete page, in the selected language
+        THEME_TITLE_SEARCH      the `sprintf`-formatted `<title>` string for the search page, in the selected language
         THEME_REPLYNO           the `sprintf`-formatted string for post numbering in threads, in the selected language
         THEME_RE                the `sprintf`-formatted prefix for reply titles (e.g. "RE[1]:..."), in the selected lang.
         THEME_APPENDED          the plain-text markup divider inserted when appending posts, in the forum's default lang.
@@ -136,9 +137,9 @@ if (!HTACCESS && FORUM_USERS == 'users') require FORUM_LIB.'error_htaccess.php';
 /* common input
    ---------------------------------------------------------------------------------------------------------------------- */
 //most pages allow for a page number; note that this is merely the user-input, it is not necessarily a valid page number!
-define ('PAGE',     preg_match ('/^[1-9][0-9]*$/', @$_GET['page']) ? (int) $_GET['page'] : false);
+define ('PAGE',     preg_match ('/^[1-9][0-9]*$/', (string) @$_GET['page']) ? (int) $_GET['page'] : false);
 //all our pages use 'path' (often optional) to specify the sub-forum being viewed, so this is done here
-define ('PATH',     preg_match ('/^(?:[^\.\/&]+\/)+$/', @$_GET['path']) ? $_GET['path'] : '');
+define ('PATH',     preg_match ('/^(?:[^\.\/&]+\/)+$/', (string) @$_GET['path']) ? $_GET['path'] : '');
 //a shorthand for when PATH is used in URL construction for HTML use
 define ('PATH_URL', safeURL (PATH));
 //for serverside use, like `chdir` / `unlink` (must replace the URL forward-slashes with backslashes on Windows)
@@ -149,7 +150,9 @@ define ('SUBFORUM', @end (explode ('/', trim (PATH, '/'))));
 
 //deny access to some folders
 //TODO: this should generate a 403, but we don't have a 403 page designed yet
-foreach (array ('users/', 'lib/', 'themes/', 'cgi-bin/') as $_) if (stripos ($_, PATH) === 0) die ();
+//NOTE: `stripos ($_, '')` (an empty `PATH`, i.e. the forum root) used to return `false` and so never match here, but as
+//      of PHP8 it returns `0` instead -- without the `PATH !== ''` guard this would `die ()` on every single request
+foreach (array ('users/', 'lib/', 'themes/', 'cgi-bin/') as $_) if (PATH !== '' && stripos ($_, PATH) === 0) die ();
 
 //we have to change directory for `is_dir` to work, see <uk3.php.net/manual/en/function.is-dir.php#70005>
 //being in the right directory is also assumed for reading 'mods.txt' and when generating the RSS (`indexRSS`)
@@ -174,8 +177,8 @@ if (@$_SERVER['HTTP_AUTHORIZATION']) list ($_SERVER['PHP_AUTH_USER'], $_SERVER['
 
 //all pages can accept a name / password when committing actions (new thread / reply &c.)
 //in the case of HTTP authentication (sign in), these are provided in the request header instead
-define ('NAME', mb_substr (@$_SERVER['PHP_AUTH_USER'] ? @$_SERVER['PHP_AUTH_USER'] : @$_POST['username'], 0, SIZE_NAME));
-define ('PASS', mb_substr (@$_SERVER['PHP_AUTH_PW']   ? @$_SERVER['PHP_AUTH_PW']   : @$_POST['password'], 0, SIZE_PASS));
+define ('NAME', mb_substr ((string) (@$_SERVER['PHP_AUTH_USER'] ? @$_SERVER['PHP_AUTH_USER'] : @$_POST['username']), 0, SIZE_NAME));
+define ('PASS', mb_substr ((string) (@$_SERVER['PHP_AUTH_PW']   ? @$_SERVER['PHP_AUTH_PW']   : @$_POST['password']), 0, SIZE_PASS));
 
 if ((   //if HTTP authentication is used, we don’t need to validate the form fields
         @$_SERVER['PHP_AUTH_USER'] && @$_SERVER['PHP_AUTH_PW']
@@ -184,7 +187,10 @@ if ((   //if HTTP authentication is used, we don’t need to validate the form f
         //are the name and password non-blank?
         NAME && PASS &&
         //the email check is a fake hidden field in the form to try and fool spam bots
-        isset ($_POST['email']) && @$_POST['email'] == 'example@abc.com'
+        isset ($_POST['email']) && @$_POST['email'] == 'example@abc.com' &&
+        //a signed, timed token (see 'spamTokenValid' in 'lib/functions.php') proves the form was freshly served by
+        //us, not forged by a bot that has simply read NNF's public source code to learn the honeypot's expected value
+        spamTokenValid (@$_POST['nnf_spam_token'])
 )) {
         //users are stored as text files based on the hash of the given name
         $name = hash ('sha512', strtolower (NAME));
@@ -278,7 +284,7 @@ define ('LANG',
                         //otherwise, try detect the language sent by the browser:
                         $lang = @array_shift (array_intersect (
                                 //- find language codes in the HTTP header and compare with the theme provided languages
-                                preg_replace ('/^([a-z0-9-]+).*/i', '$1', explode (',', $_SERVER['HTTP_ACCEPT_LANGUAGE'])),
+                                preg_replace ('/^([a-z0-9-]+).*/i', '$1', explode (',', (string) @$_SERVER['HTTP_ACCEPT_LANGUAGE'])),
                                 explode (' ', THEME_LANGS)
                         ))
                         ? $lang
@@ -296,6 +302,7 @@ define ('LANG',
 @define ('THEME_TITLE_PAGENO',  $LANG[LANG]['title_pagenum']);
 @define ('THEME_TITLE_APPEND',  $LANG[LANG]['title_append']);
 @define ('THEME_TITLE_DELETE',  $LANG[LANG]['title_delete']);
+@define ('THEME_TITLE_SEARCH',  $LANG[LANG]['title_search']);
 @define ('THEME_REPLYNO',       $LANG[LANG]['replynum']);
 //these texts get permenantly inserted into the RSS, so we don't refer to the user-selected language
 //but the default language set for the whole forum
@@ -311,6 +318,13 @@ define ('LANG',
 //stop browsers caching, so you don’t have to refresh every time to see changes
 header ('Cache-Control: no-cache', true);
 header ('Expires: 0', true);
+
+//never send a Referer header when a visitor follows a link out of the forum (e.g. a link posted in a thread, or the
+//search box). this matters for every install, but especially for one running as a Tor onion service: without this,
+//following an outbound link would leak the forum's .onion address to whatever site is being visited
+header ('Referrer-Policy: no-referrer', true);
+//prevent browsers guessing (“sniffing”) content-types, which has historically enabled some XSS attacks
+header ('X-Content-Type-Options: nosniff', true);
 
 //if enabled, enforce HTTPS
 if (FORUM_HTTPS) if (@$_SERVER['HTTPS'] == 'on') {

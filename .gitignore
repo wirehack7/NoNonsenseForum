@@ -18,6 +18,7 @@
 !thread.php
 !markup.php
 !privacy.php
+!search.php
 !lib/
 !themes/
 !users/
@@ -27,3 +28,16 @@
 !INSTALL.txt
 !LICENCE.txt
 !README.txt
+
+# dev tooling / CI (not part of the running forum itself)
+!.github/
+!.github/**
+!composer.json
+!composer.lock
+!phpunit.xml
+!phpstan.neon
+!phpstan-bootstrap.php
+!tests/
+!tests/**
+!Dockerfile
+!.dockerignore

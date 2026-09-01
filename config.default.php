@@ -32,7 +32,17 @@
 //"HSTS" <en.wikipedia.org/wiki/HTTP_Strict_Transport_Security> will be used to tell clients to use HTTPS by default
 //NOTE: If you change this setting, old RSS feeds will still contain HTTP URLs, but this won’t pose a problem as the HSTS
 //      header will tell browsers to automatically redirect these to HTTPS
+//NOTE: leave this "false" for a Tor onion service (".onion")! Onion addresses are already end-to-end encrypted and
+//      authenticated by Tor itself, are normally served plain-HTTP from localhost, and don't have a browser-trusted
+//      TLS certificate -- forcing HTTPS / HSTS here would just break access rather than add any real protection
 @define ('FORUM_HTTPS',         false);
+
+//if the built-in search box ('search.php') should be shown. this searches only this forum's own threads (see
+//`searchThreads ()` in 'lib/functions.php') -- nothing is sent to any third party, so this works identically
+//whether the forum is reached over the clearnet or as a Tor onion service (".onion")
+@define ('FORUM_SEARCH',        true);
+//number of search results to show per page
+@define ('FORUM_SEARCH_RESULTS', 25);
 
 //folder name of the theme to use, in "/themes/*"
 @define ('FORUM_THEME',         'greyscale');
@@ -52,6 +62,7 @@
 @define ('SIZE_PASS',           20);            //password
 @define ('SIZE_TITLE',          100);           //post title
 @define ('SIZE_TEXT',           50000);         //post message
+@define ('SIZE_SEARCH',         100);           //search query
 
 
 ?>

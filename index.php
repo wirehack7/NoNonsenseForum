@@ -10,8 +10,8 @@ require_once './start.php';
 
 //submitted info for making a new thread
 //(name / password already handled in 'start.php')
-define ('TITLE', mb_substr (@$_POST['title'], 0, SIZE_TITLE));
-define ('TEXT',  mb_substr (@$_POST['text'],  0, SIZE_TEXT ));
+define ('TITLE', mb_substr ((string) @$_POST['title'], 0, SIZE_TITLE));
+define ('TEXT',  mb_substr ((string) @$_POST['text'],  0, SIZE_TEXT ));
 
 //can the current user post new threads in the current forum?
 //(posting replies is dependent on the the thread -- if locked -- so tested in 'thread.php')
@@ -37,7 +37,9 @@ if (CAN_POST && AUTH && TITLE && TEXT) {
         while (file_exists ("$file") || file_exists ("$file.rss"));
         
         //write out the new thread as an RSS file:
-        $post_id = base_convert (microtime (), 10, 36);
+        //`microtime ()` returns e.g. "0.12345600 1234567890" -- strip the non-digit characters before conversion,
+        //rather than relying on `base_convert` to silently (and, as of PHP8, noisily) ignore them for us
+        $post_id = base_convert (preg_replace ('/[^0-9]/', '', microtime ()), 10, 36);
         $rss = new DOMTemplate (file_get_contents (FORUM_LIB.'rss-template.xml'));
         $rss->set (array (
                 '/rss/channel/title'            => TITLE,

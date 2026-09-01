@@ -7,7 +7,6 @@
 	<title>Privacy Policy</title>
 	<!-- get rid of IE site compatibility button -->
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<!--[if lt IE 9]><script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
 	<link rel="stylesheet" href="/themes/greyscale/theme.css">
 	<link rel="stylesheet" href="/themes/greyscale/custom.css">
 	<link rel="canonical" href="/privacy.php">
@@ -31,9 +30,8 @@
 		--><span class="nnf_forum-name">NoNonsense Forum</span>
 	</a></h1>
 	
-	<form id="search" method="get" action="http://google.com/search"><!--
-		--><input type="hidden" name="as_sitesearch" value="forum.camendesign.com"><!--
-		--><input id="query" type="search" name="as_q" placeholder="Google Search…"><!--
+	<form id="search" method="get" action="search.php"><!--
+		--><input id="query" type="search" name="q" maxlength="100" placeholder="Search…" value=""><!--
 		--><input id="go" type="image" src="/themes/greyscale/img/go.png" width="20" height="20" alt="Search"><!--
 	--></form>
 	
@@ -109,8 +107,8 @@
 		collected by any part of NoNonsense Forum itself; again, contact the website owner with any questions
 	</p></li>
 	<li><p>
-		The search feature is controlled by a third party (usually <a href="http://google.com">Google</a>),
-		and will certainly collect information. Please check their website for their privacy policy
+		The search feature is entirely self-hosted: your search terms are never sent to, or seen by, anyone
+		other than this site, and only ever search this site's own public posts
 	</p></li>
 </ul>
 

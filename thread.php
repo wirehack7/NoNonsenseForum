@@ -9,12 +9,12 @@
 require_once './start.php';
 
 //get the post message, the other fields (name / pass) are retrieved automatically in 'start.php'
-define ('TEXT', mb_substr (@$_POST['text'], 0, SIZE_TEXT));
+define ('TEXT', mb_substr ((string) @$_POST['text'], 0, SIZE_TEXT));
 
 //which thread to show
 //TODO: an error here should generate a 404, but we can't create a 404 in PHP that will send the server's provided 404 page.
 //      I may revist this if I create an NNF-provided 404 page
-$FILE   = (preg_match ('/^[_a-z0-9-]+$/', @$_GET['file']) ? $_GET['file'] : '') or die ('Malformed request');
+$FILE   = (preg_match ('/^[_a-z0-9-]+$/', (string) @$_GET['file']) ? $_GET['file'] : '') or die ('Malformed request');
 
 //load the thread (have to read lock status from the file)
 //TODO: if file is missing, give 404, as above
@@ -110,7 +110,7 @@ if ((isset ($_POST['lock']) || isset ($_POST['unlock'])) && IS_MOD) {
 /* ======================================================================================================================
    append link clicked
    ====================================================================================================================== */
-if ($ID = (preg_match ('/^[A-Z0-9]+$/i', @$_GET['append']) ? $_GET['append'] : false)) {
+if ($ID = (preg_match ('/^[A-Z0-9]+$/i', (string) @$_GET['append']) ? $_GET['append'] : false)) {
         //get a write lock on the file so that between now and saving, no other posts could slip in
         $f   = fopen ("$FILE.rss", 'r+'); flock ($f, LOCK_EX);
         $xml = simplexml_load_string (fread ($f, filesize ("$FILE.rss"))) or require FORUM_LIB.'error_xml.php';
@@ -231,7 +231,7 @@ if ($ID = (preg_match ('/^[A-Z0-9]+$/i', @$_GET['append']) ? $_GET['append'] : f
    ====================================================================================================================== */
 if (isset ($_GET['delete'])) {
         //the ID of the post to delete. will be omitted if deleting the whole thread
-        $ID = (preg_match ('/^[A-Z0-9]+$/i', @$_GET['delete']) ? $_GET['delete'] : false);
+        $ID = (preg_match ('/^[A-Z0-9]+$/i', (string) @$_GET['delete']) ? $_GET['delete'] : false);
         //get a write lock on the file so that between now and saving, no other posts could slip in
         $f = fopen ("$FILE.rss", 'r+'); flock ($f, LOCK_EX);
         
@@ -397,7 +397,9 @@ if (CAN_REPLY && AUTH && TEXT) {
                 $url = $xml->channel->item[0]->link;
         } else {
                 //where will this post exist?
-                $post_id = base_convert (microtime (), 10, 36);
+                //`microtime ()` returns e.g. "0.12345600 1234567890" -- strip the non-digit characters before
+                //conversion, rather than relying on `base_convert` to silently (and, as of PHP8, noisily) ignore them
+                $post_id = base_convert (preg_replace ('/[^0-9]/', '', microtime ()), 10, 36);
                 $page = (count ($thread)+1) % FORUM_POSTS == 1
                         ? floor ((count ($thread)+1) / FORUM_POSTS)
                         : ceil  ((count ($thread)+1) / FORUM_POSTS)
