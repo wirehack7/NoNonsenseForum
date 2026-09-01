@@ -9,3 +9,4 @@ phpstan.neon
 phpstan-bootstrap.php
 .phpunit.result.cache
 config.php
+data

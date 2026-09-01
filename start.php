@@ -83,6 +83,11 @@ mb_regex_encoding    ('UTF-8');
 define ('FORUM_ROOT',   dirname (__FILE__));
 //location of the 'lib' folder, full server path
 define ('FORUM_LIB',    FORUM_ROOT.DIRECTORY_SEPARATOR.'lib'.DIRECTORY_SEPARATOR);
+//where NNF stores everything it writes at request-time -- sub-forums, threads (the '.rss' files), the RSS / sitemap
+//indexes, the 'users' folder, 'config.php', and per-forum 'about.html' / 'mods.txt' / 'locked.txt' &c. defaults to
+//`FORUM_ROOT` (data has always lived alongside the code); set the `NNF_DATA_DIR` environment variable to a separate
+//directory to keep the two apart (see the Docker setup)
+define ('FORUM_DATA',   rtrim (getenv ('NNF_DATA_DIR') ?: FORUM_ROOT, '/\\') ?: DIRECTORY_SEPARATOR);
 
 //correct PHP version?
 if (version_compare (PHP_VERSION, '5.2.3') < 0) require FORUM_LIB.'error_phpver.php';
@@ -104,7 +109,9 @@ require_once FORUM_LIB.'functions.php';                         //import NNF's s
 
 //location of NNF relative to the webroot, i.e. if NNF is in a sub-folder or not
 //we URL-encode this as it’s never used for server-side paths, `FORUM_ROOT` / `FORUM_LIB` are for that
-define ('FORUM_PATH', safeURL (str_replace (
+//`NNF_URL_PATH` lets the deployment state this explicitly -- needed when the code is served from a location that
+//isn't the public path (e.g. the Docker image serves it via an "Alias", so `SCRIPT_NAME` can't be trusted here)
+define ('FORUM_PATH', ($_ = getenv ('NNF_URL_PATH')) ? safeURL ($_) : safeURL (str_replace (
         array ('\\', '//'), '/',                                //- replace Windows forward-slash with backslash
         dirname ($_SERVER['SCRIPT_NAME']).'/'                   //- always starts with a slash and ends in one
 )));
@@ -112,10 +119,10 @@ define ('FORUM_PATH', safeURL (str_replace (
 /* site configuration
    ---------------------------------------------------------------------------------------------------------------------- */
 //try set the forum owner’s personal config ('config.php'), if it exists
-@(include './config.php');
+@(include FORUM_DATA.DIRECTORY_SEPARATOR.'config.php');
 //include the defaults: (for anything missing from the user’s config)
 //see that file for descriptions of the different available options
-@(include './config.default.php') or require FORUM_LIB.'error_configdefault.php';
+@(include FORUM_ROOT.DIRECTORY_SEPARATOR.'config.default.php') or require FORUM_LIB.'error_configdefault.php';
 
 //PHP 5.3 issues a warning if the timezone is not set when using date commands
 //(`FORUM_TIMEZONE` is set in the config and defaults to 'UTC')
@@ -156,7 +163,7 @@ foreach (array ('users/', 'lib/', 'themes/', 'cgi-bin/') as $_) if (PATH !== '' 
 //we have to change directory for `is_dir` to work, see <uk3.php.net/manual/en/function.is-dir.php#70005>
 //being in the right directory is also assumed for reading 'mods.txt' and when generating the RSS (`indexRSS`)
 //(oddly with `chdir` the path must end in a slash)
-@chdir (FORUM_ROOT.PATH_DIR) or die ('Invalid path');
+@chdir (FORUM_DATA.PATH_DIR) or die ('Invalid path');
 //TODO: that should generate a 404, but we can't create a 404 in PHP that will send the server's provided 404 page.
 //      I may revist this if I create an NNF-provided 404 page
 
@@ -193,7 +200,7 @@ if ((   //if HTTP authentication is used, we don’t need to validate the form f
 )) {
         //users are stored as text files based on the hash of the given name
         $name = hash ('sha512', strtolower (NAME));
-        $user = FORUM_ROOT.DIRECTORY_SEPARATOR.FORUM_USERS.DIRECTORY_SEPARATOR."$name.txt";
+        $user = FORUM_DATA.DIRECTORY_SEPARATOR.FORUM_USERS.DIRECTORY_SEPARATOR."$name.txt";
         
         //create the user, if new:
         //- if registrations are allowed (`FORUM_NEWBIES` is true)
@@ -233,7 +240,7 @@ define ('FORUM_LOCK', trim (@file_get_contents ('locked.txt')));
 // flag, but `array_filter` kills two birds with one stone since we don’t have to check if the file exists beforehand.)
 $MODS = array (
         //'mods.txt' on root for mods on all sub-forums
-        'GLOBAL'=>        array_filter ((array) @file (FORUM_ROOT.DIRECTORY_SEPARATOR.'mods.txt', FILE_IGNORE_NEW_LINES)),
+        'GLOBAL'=>        array_filter ((array) @file (FORUM_DATA.DIRECTORY_SEPARATOR.'mods.txt', FILE_IGNORE_NEW_LINES)),
         //if in a sub-forum, the local 'mods.txt'
         'LOCAL' => PATH ? array_filter ((array) @file ('mods.txt', FILE_IGNORE_NEW_LINES)) : array ()
 );

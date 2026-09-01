@@ -5,6 +5,7 @@
 
 # the theme's HTML templates
 !theme.css
+!custom.css
 !append.html
 !delete.html
 !index.html

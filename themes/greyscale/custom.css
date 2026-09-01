@@ -1,0 +1,76 @@
+/* dark theme — auto-activates when the OS/browser is set to dark mode.
+   ponytail: overrides theme.css by selector because that file uses hard-coded
+   hex colours, not custom properties. add a manual toggle only if requested. */
+@media (prefers-color-scheme: dark) {
+
+html, body                      {color: #b0b0b0;}
+html                            {background: #1b1b1b none; background-image: none;}
+
+a                               {color: #7fb0d8;}
+a:hover                         {color: #a9cdec;}
+
+blockquote                      {border-left-color: #666;}
+.ct                             {border-bottom-color: #666;}
+.cb                             {border-top-color: #666;}
+h2, article h2, article .hr     {border-bottom-color: #555;}
+
+/* header / footer bars (already dark, keep them consistent) */
+h1                              {color: #ececec; background: #111;}
+#mast h1, footer                {background: #111;}
+#mast h1 a                      {color: #ececec;}
+footer p                        {color: #ececec;}
+
+/* search box */
+#query                          {color: #ddd; background-color: #333;}
+
+/* breadcrumb / add / reply / rss links */
+#index a, #info a               {color: #b0b0b0;}
+#nnf_add, #nnf_reply, #nnf_rss  {color: #ececec !important;}
+
+/* sections (index) */
+section                         {color: #c8c8c8; background: #262626;}
+section h1                      {background-color: #111;}
+section nav                     {color: #999; background-color: #1b1b1b;}
+
+ol.nnf_pages a                  {color: #999;}
+ol.nnf_pages a:hover            {color: #fff; background-color: #555;}
+ol.nnf_pages em                 {color: #fff; background: #555;}
+
+ol.ui                           {border-color: #3a3a3a;}
+ol.ui li                        {color: #9a9a9a; border-bottom-color: #3a3a3a;}
+ol.ui li.nnf_sticky             {background: #2f2f2f;}
+ol.ui li time                   {color: #888;}
+#nnf_folders ol.ui li           {border-bottom-color: #3a3a3a;}
+
+.nnf_result-snippet             {color: #999;}
+
+/* thread page */
+article                         {border-color: #3a3a3a;}
+article header                  {color: #aaa; background: #333; border-bottom-color: #3a3a3a;}
+article.nnf_op header           {color: #ececec; background: #454545;}
+article.nnf_deleted             {color: #777;}
+article.nnf_deleted header,
+ article.nnf_error header       {color: #777; background: #262626;}
+article header .ui              {color: #333;}
+article header .ui:hover        {color: #ddd;}
+
+/* forms */
+form                            {border-color: #3a3a3a;}
+label                           {color: #ddd;}
+form p                          {color: #9a9a9a;}
+#ptext label                    {border-right-color: #262626; background: #262626;}
+#nnf_title-field, #nnf_name-field,
+ #nnf_name-field-http, #nnf_pass-field,
+ #nnf_text-field                {color: #ddd; background: #222; border-bottom-color: #3a3a3a;}
+#nnf_text-field                 {border-right-color: #3a3a3a;}
+#ptitle label                   {border-bottom-color: #3a3a3a;}
+#psubmit                        {background: #333;}
+#psubmit label                  {color: #ececec;}
+#delete #rightcol               {border-left-color: #555;}
+
+.ok, #protip                    {color: #9a9a9a;}
+
+/* footer sign-in */
+#signin input                   {color: #ececec;}
+
+}

@@ -6,7 +6,7 @@
 
 foreach (array (
         //start.php: strings
-        'FORUM_ROOT' => __DIR__, 'FORUM_LIB' => __DIR__.'/lib/', 'FORUM_PATH' => '/', 'PATH' => '', 'PATH_URL' => '',
+        'FORUM_ROOT' => __DIR__, 'FORUM_DATA' => __DIR__, 'FORUM_LIB' => __DIR__.'/lib/', 'FORUM_PATH' => '/', 'PATH' => '', 'PATH_URL' => '',
         'PATH_DIR' => '/', 'SUBFORUM' => '', 'NAME' => '', 'PASS' => '', 'FORUM_URL' => 'http://example.test',
         'FORUM_LOCK' => '', 'THEME_ROOT' => __DIR__.'/themes/greyscale/', 'DATE_FORMAT' => 'd M Y',
         'THEME_TITLE' => '%1$s%2$s', 'THEME_TITLE_PAGENO' => ' + %1$u', 'THEME_TITLE_APPEND' => 'Append to %1$s',

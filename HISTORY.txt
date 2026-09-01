@@ -23,10 +23,19 @@ v27     (in development)
         now set centrally in `prepareTemplate ()`; if you have a custom theme, update its search form accordingly
         (the query field's `name` also changed, from "as_q" to "q")
 *       Added a Docker Compose setup ('docker-compose.yml', 'Dockerfile', 'docker-entrypoint.sh') for running NNF
-        (PHP + Apache) without installing PHP or a web server -- see INSTALL.txt section [1.7]. Threads /
-        sub-forums (which have no fixed, mountable path of their own -- see README.txt) persist in a named Docker
-        volume; "config.php" and the "users" folder (which do have a fixed path) are bind-mounted directly into
-        the checkout instead, so they survive even a `docker compose down -v`
+        (PHP + Apache) without installing PHP or a web server -- see INSTALL.txt section [1.7].
+*       NNF's request-time data root is now separable from its code. Everything NNF writes (sub-forums, the "*.rss"
+        threads, "index.xml" / "sitemap.xml", the "users" folder, "config.php", per-forum "about.html" / "mods.txt")
+        goes to `FORUM_DATA` instead of `FORUM_ROOT`; `FORUM_DATA` defaults to `FORUM_ROOT`, so a plain source
+        install is completely unchanged, but setting the `NNF_DATA_DIR` environment variable points it elsewhere.
+        The optional `NNF_URL_PATH` env var likewise lets a deployment state NNF's public path outright when the
+        code is served from somewhere else (an `Alias`, a reverse proxy) and `SCRIPT_NAME` can't be trusted.
+        The Docker image uses both: the code lives at "/var/www/nnf" (outside the web-root) and the web-root
+        "/var/www/html" -- bind-mounted to "./data" -- now holds nothing but the forum's data. The entrypoint no
+        longer copies code into the data volume on every start, so removed / renamed files no longer linger there.
+        NOTE: existing Docker deployments must migrate the old named volume -- see INSTALL.txt section [1.7].
+        NOTE: custom themes -- 'nnf.conf' exposes the theme folder to the browser at "/themes"; a per-instance
+        theme override now means rebuilding the image or adding your own mount
 
 v26     22.FEB.15
 *       Fixed problems with transliteration when on PHP5.4 without all the necessary libs in place

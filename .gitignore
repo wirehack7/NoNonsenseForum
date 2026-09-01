@@ -6,6 +6,8 @@
 
 # server
 !.htaccess
+!.htaccess.docker
+!nnf.conf
 !robots.txt
 !favicon.default.ico
 !apple-touch-icon.default.png

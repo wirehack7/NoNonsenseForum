@@ -6,22 +6,13 @@ services:
     #image: ghcr.io/wirehack7/nononsenseforum:latest
     ports:
       - "8080:80"
+    environment:
+      # where NNF keeps everything it writes -- this is the web-root inside the container, and the mount below.
+      # the application code lives separately at "/var/www/nnf" (baked into the image).
+      NNF_DATA_DIR: /var/www/html
     volumes:
-      # catch-all for the application code *and* anything that doesn't have a fixed, predictable path of its own --
-      # namely threads/sub-forums, since NNF has no database and no dedicated "data" directory: a thread is just a
-      # file, created wherever the admin has made a sub-forum folder (including none at all, i.e. the web-root
-      # itself), under a name derived from its title. There's no fixed path Docker could mount for "posts" alone.
-      # the entrypoint script (see 'Dockerfile' / 'docker-entrypoint.sh') copies NNF's code into this volume on
-      # every container start, keeping it in sync with the image without ever touching anything else already here
-      - nnf-data:/var/www/html
-      # ...but "config.php" and the "users" folder (login credentials, the anti-spam secret) *do* have a fixed
-      # path, so -- unlike threads -- they can be split out into their own, directly host-editable/backup-able
-      # bind mounts, layered on top of the volume above. Docker auto-creates "./users" if it doesn't exist yet,
-      # but *not* "./config.php" as a file (it would end up an empty directory instead) -- create it first, e.g.:
-      #     cp config.default.php config.php
-      - ./config.php:/var/www/html/config.php
-      - ./users:/var/www/html/users
+      # the data volume: sub-forums, threads ("*.rss"), "index.xml" / "sitemap.xml", "config.php", the "users"
+      # folder, per-forum "about.html" / "mods.txt" &c. -- and nothing else. directly host-editable and backup-able.
+      # "config.php" is seeded from "config.default.php" on first start; edit "./data/config.php" to customise.
+      - ./data:/var/www/html
     restart: unless-stopped
-
-volumes:
-  nnf-data:
