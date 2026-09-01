@@ -162,6 +162,10 @@ serve it as a Tor hidden service -- point a `HiddenServiceDir` /
 NNF (typically listening only on 127.0.0.1) and the site will work at
 its ".onion" address exactly as it does on the clearnet.
 
+For a hidden-ONLY deployment -- where the server must never answer on
+its clearnet IP and nothing about the setup is linked to you -- see the
+step-by-step guide in "TOR.md".
+
 A few things worth checking for a Tor-only, or Tor-and-clearnet, install:
 
 *       Leave `FORUM_HTTPS` set to "false" in 'config.php'. Onion

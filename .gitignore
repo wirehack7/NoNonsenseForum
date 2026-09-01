@@ -30,6 +30,7 @@
 !INSTALL.txt
 !LICENCE.txt
 !README.txt
+!TOR.md
 
 # dev tooling / CI (not part of the running forum itself)
 !.github/
@@ -44,4 +45,7 @@
 !Dockerfile
 !.dockerignore
 !docker-compose.yml
+!docker-compose.tor.yml
 !docker-entrypoint.sh
+!deploy-onion.sh
+!rotate-onion.sh

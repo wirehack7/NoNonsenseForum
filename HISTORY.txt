@@ -36,6 +36,10 @@ v27     (in development)
         NOTE: existing Docker deployments must migrate the old named volume -- see INSTALL.txt section [1.7].
         NOTE: custom themes -- 'nnf.conf' exposes the theme folder to the browser at "/themes"; a per-instance
         theme override now means rebuilding the image or adding your own mount
+*       Added 'TOR.md': a step-by-step guide to running NNF as a hidden-only Tor onion service via the Docker image
+        (Tor on the host, the container's web port published to loopback only), covering anonymous provisioning,
+        host hardening, admin-over-onion, keeping the clearnet IP from revealing that a forum runs there, and a
+        verification checklist. 'docker-compose.tor.yml' is the loopback-only compose file it uses.
 
 v26     22.FEB.15
 *       Fixed problems with transliteration when on PHP5.4 without all the necessary libs in place

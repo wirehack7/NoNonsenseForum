@@ -10,3 +10,9 @@ phpstan-bootstrap.php
 .phpunit.result.cache
 config.php
 data
+tor-data
+docker-compose.yml
+docker-compose.tor.yml
+deploy-onion.sh
+rotate-onion.sh
+TOR.md

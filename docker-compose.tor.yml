@@ -1,0 +1,26 @@
+# NNF for a hidden-only Tor onion service. Tor runs on the HOST; this stack only
+# changes one thing versus "docker-compose.yml": the web port is published to
+# LOOPBACK ONLY (127.0.0.1), so the host's Tor can forward it to the Tor network
+# and nothing is reachable on the server's public IP.
+#
+#   docker compose -f docker-compose.tor.yml up -d --build
+#
+# Host "/etc/tor/torrc" then needs:
+#   HiddenServiceDir /var/lib/tor/nnf/
+#   HiddenServicePort 80 127.0.0.1:8080
+#   HiddenServiceVersion 3
+#
+# See TOR.md for the full setup, hardening and OpSec.
+name: nnf-tor
+
+services:
+  forum:
+    build: .
+    ports:
+      - "127.0.0.1:8080:80"        # <-- LOOPBACK ONLY. never "8080:80" / "0.0.0.0".
+    environment:
+      NNF_DATA_DIR: /var/www/html
+      NNF_URL_PATH: /
+    volumes:
+      - ./data:/var/www/html
+    restart: unless-stopped
