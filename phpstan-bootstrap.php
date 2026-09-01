@@ -14,7 +14,7 @@ foreach (array (
         'THEME_RE' => 'RE[%1$u]: %2$s', 'THEME_APPENDED' => ':: @%1$s added on %2$s', 'THEME_DEL_USER' => '',
         'THEME_DEL_MOD' => '', 'THEME_HTML_ERROR' => '',
         //start.php: booleans
-        'HTACCESS' => true, 'FORM_SUBMIT' => false, 'AUTH' => false, 'AUTH_HTTP' => false, 'IS_ADMIN' => false,
+        'HTACCESS' => true, 'FORM_SUBMIT' => false, 'AUTH' => false, 'AUTH_HTTP' => false, 'ANON' => false, 'NAME_CLAIMED' => false, 'IS_ADMIN' => false,
         'IS_MOD' => false, 'IS_MEMBER' => false,
         //start.php: mixed
         'PAGE' => 1, 'LANG' => '',
@@ -22,7 +22,9 @@ foreach (array (
         'FORUM_USERS' => 'users', 'FORUM_NAME' => 'NoNonsense Forum', 'FORUM_TIMEZONE' => 'UTC',
         //config.default.php / config.php: booleans
         'FORUM_HTTPS' => false, 'FORUM_SEARCH' => true, 'FORUM_THEME' => 'greyscale', 'FORUM_ENABLED' => true,
-        'FORUM_NEWBIES' => true,
+        'FORUM_NEWBIES' => true, 'FORUM_ANON' => false,
+        //config.default.php: password hashing algorithm (PASSWORD_DEFAULT is int|string depending on PHP version)
+        'FORUM_PASS_ALGO' => PASSWORD_DEFAULT,
         //config.default.php / config.php: integers
         'FORUM_THREADS' => 50, 'FORUM_POSTS' => 25, 'FORUM_SEARCH_RESULTS' => 25, 'SIZE_NAME' => 20,
         'SIZE_PASS' => 20, 'SIZE_TITLE' => 100, 'SIZE_TEXT' => 50000, 'SIZE_SEARCH' => 100,

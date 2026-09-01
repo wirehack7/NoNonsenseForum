@@ -43,6 +43,15 @@ v27     (in development)
         passwords out per person/group and revoke them individually (delete a line). Plain text or "password_hash ()"
         values, optional trailing " # label". "tools/manage-access.sh" (with "-f <sub-forum>") manages the file.
         See INSTALL.txt section [2.6]. (Does not cover direct requests for the static ".rss"/".xml" feeds.)
+*       User passwords in the "users" folder are now stored with `password_hash ()` -- bcrypt by default, or set
+        `FORUM_PASS_ALGO` to `PASSWORD_ARGON2ID` in "config.php" for Argon2 (the official PHP Docker images have it).
+        Files written by older versions (a bare unsalted `hash ('sha512', ...)`) still work and are re-hashed to
+        the new format transparently the first time that user signs in -- no accounts break, nothing to run.
+*       New `FORUM_ANON` option (default false): when on, a post may be made with NO password -- but only under a
+        name nobody has claimed. A name that has a password set always requires it, and moderators / members
+        always need theirs. Such a name stays unclaimed (anyone can post under it, it can still be claimed later).
+*       Cookies (the language cookie, and the access-gate cookies) are now set with `SameSite=Lax` and `HttpOnly`.
+        The access-gate cookie value was already an unforgeable HMAC keyed by the per-install secret.
 *       Error pages rewritten: the visitor now sees a short, generic message with no server paths, folder names,
         config-option names or software versions; the real detail goes to the server error log instead (shared
         'lib/error.php'). The Docker image also turns PHP "display_errors" off, so a stray warning can't leak a

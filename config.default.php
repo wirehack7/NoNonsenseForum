@@ -51,6 +51,14 @@
 @define ('FORUM_ENABLED',       true);
 //if new users are allowed to register. set to false and only existing registered users will be allowed to post
 @define ('FORUM_NEWBIES',       true);
+//if true, a post may be made WITHOUT a password -- but only under a name nobody has claimed yet (a name that has a
+//password set always requires it). such a name stays unclaimed: anyone could post under it, and it can still be
+//claimed later with a password. moderators and members always need their password.
+@define ('FORUM_ANON',          false);
+//algorithm used to hash the passwords stored in the "users" folder. the default is portable (currently bcrypt).
+//set to `PASSWORD_ARGON2ID` for Argon2 (needs PHP built with argon2 support -- the official PHP Docker images have
+//it). existing password files are upgraded to this algorithm automatically the next time that user signs in.
+@define ('FORUM_PASS_ALGO',     PASSWORD_DEFAULT);
 
 //number of threads and posts to show per page
 //WARNING: changing these will inadvertadely invalidate post permalinks, decide on these numbers in the beginning

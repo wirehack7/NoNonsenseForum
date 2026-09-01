@@ -27,7 +27,7 @@ define ('CAN_POST', FORUM_ENABLED && (
    ====================================================================================================================== */
 //has the user submitted a new thread?
 //(`AUTH` will be true if username and password submitted and correct, `TITLE` and `TEXT` are checked to not be blank)
-if (CAN_POST && AUTH && TITLE && TEXT) {
+if (CAN_POST && (AUTH || ANON) && TITLE && TEXT) {
         //the file on disk is a simplified version of the title; see 'lib/functions.php' for `safeTransliterate`
         $translit = safeTransliterate (TITLE);
         
@@ -288,14 +288,18 @@ if (CAN_POST) $template->set (array (
         ? '#nnf_error-newbies'  //yes: remove the warning message
         : '#nnf_error-none'     //no:  remove the default message
         
+//if the forum allows password-less posting, the password field isn't required
+)->remove (array ('#nnf_pass-field@required' => FORUM_ANON)
+
 //handle error messages
 )->remove (array (
         //if there's an error of any sort, remove the default messages
         '#nnf_error-none, #nnf_error-none-http, #nnf_error-newbies' => FORM_SUBMIT,
-        //if the username & password are correct, remove the error message
-        '#nnf_error-auth' => !FORM_SUBMIT || !TITLE || !TEXT || !NAME || !PASS || AUTH,
-        //if the password is valid, remove the error message
-        '#nnf_error-pass' => !FORM_SUBMIT || !TITLE || !TEXT || !NAME || PASS,
+        //"that name is taken / wrong password": only when the name is actually claimed (or a password was tried)
+        //and it didn't check out, and we're not letting this through as an anonymous post
+        '#nnf_error-auth' => !FORM_SUBMIT || !TITLE || !TEXT || !NAME || AUTH || ANON || (!PASS && !NAME_CLAIMED),
+        //"enter a password": only when passwords are mandatory (anon posting off)
+        '#nnf_error-pass' => !FORM_SUBMIT || !TITLE || !TEXT || !NAME || PASS || FORUM_ANON,
         //if the name is valid, remove the error message
         '#nnf_error-name' => !FORM_SUBMIT || !TITLE || !TEXT || NAME,
         //if the message text is valid, remove the error message

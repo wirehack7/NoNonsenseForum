@@ -458,6 +458,37 @@ function spamTokenValid ($token, $min_age=3, $max_age=21600 /* 6 hours */) {
         return $age >= $min_age && $age <= $max_age;
 }
 
+/* user passwords
+   ====================================================================================================================== */
+/* each registered name is a file in the "users" folder whose contents is a hash of that name's password. modern
+   files hold a `password_hash ()` string (bcrypt by default, or Argon2 -- see `FORUM_PASS_ALGO`); files written by
+   older versions of NNF hold a bare `hash ('sha512', <name-hash>.<password>)` hex digest and are transparently
+   re-hashed to the modern format the first time that user signs in. */
+
+//write a fresh password file for a name. $userFile is the full path; $password the plain-text password.
+function userCreate ($userFile, $password) {
+	return (bool) @file_put_contents ($userFile, password_hash ($password, FORUM_PASS_ALGO), LOCK_EX);
+}
+
+//check a submitted password against a name's stored hash. $legacyInput is what the pre-`password_hash ()` format
+//hashed: "<name-hash>.<password>". returns true / false, or NULL if the name isn't registered.
+function userVerify ($userFile, $password, $legacyInput) {
+	$stored = trim ((string) @file_get_contents ($userFile));
+	if ($stored === '') return null;
+
+	if ($stored[0] === '$') {                        //- modern `password_hash ()` string
+		if (!password_verify ($password, $stored)) return false;
+		if (password_needs_rehash ($stored, FORUM_PASS_ALGO))
+			@file_put_contents ($userFile, password_hash ($password, FORUM_PASS_ALGO), LOCK_EX);
+		return true;
+	}
+
+	if (!hash_equals ($stored, hash ('sha512', $legacyInput))) return false;   //- legacy sha512 hex
+	@file_put_contents ($userFile, password_hash ($password, FORUM_PASS_ALGO), LOCK_EX);   //- upgrade in place
+	return true;
+}
+
+
 /* access gate
    ====================================================================================================================== */
 /* an 'access.txt' file placed in the forum root -- or in any sub-forum folder, alongside 'mods.txt' / 'locked.txt'
@@ -537,10 +568,14 @@ function requireAccess () {
         $error = false;
         if (isset ($_POST['nnf_access_password'])) {
                 if (($match = accessMatch ($passwords, $_POST['nnf_access_password'])) !== '') {
-                        setcookie (
-                                $cookie, accessCookie ($match), time () + 60*60*24*30,
-                                FORUM_PATH, $_SERVER['HTTP_HOST'], FORUM_HTTPS, true
-                        );
+                        //the value is already an HMAC keyed by this install's random secret -- it can't be forged
+                        //without that key and stops working the moment its 'access.txt' line is removed. the flags
+                        //below just stop it being read by scripts or sent cross-site.
+                        setcookie ($cookie, accessCookie ($match), array (
+                                'expires'  => time () + 60*60*24*30, 'path' => FORUM_PATH,
+                                'domain'   => $_SERVER['HTTP_HOST'], 'secure' => FORUM_HTTPS,
+                                'httponly' => true, 'samesite' => 'Lax'
+                        ));
                         //303 back to the same URL so a refresh / back-button doesn't re-submit the password
                         header ('Location: '.FORUM_URL.$_SERVER['REQUEST_URI'], true, 303);
                         exit;
